@@ -70,7 +70,7 @@ export function matchesEvent(event: KeyboardEvent, hotkey: ParsedHotkey): boolea
 
   const isMac =
     navigator.platform?.startsWith("Mac") ||
-    (navigator as Record<string, { platform?: string }>).userAgentData?.platform === "macOS";
+    (navigator as unknown as Record<string, { platform?: string }>).userAgentData?.platform === "macOS";
 
   if (isMac) {
     // "Ctrl" in hotkey → Cmd on Mac

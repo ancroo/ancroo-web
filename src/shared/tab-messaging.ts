@@ -9,7 +9,7 @@
 const injectedTabs = new Set<number>();
 
 /** Send a message to the content script in a tab, injecting it first if needed. */
-export async function sendToTab(tabId: number, message: object): Promise<unknown> {
+export async function sendToTab<T = unknown>(tabId: number, message: object): Promise<T> {
   if (!injectedTabs.has(tabId)) {
     try {
       return await chrome.tabs.sendMessage(tabId, message);
@@ -18,7 +18,7 @@ export async function sendToTab(tabId: number, message: object): Promise<unknown
     }
   }
 
-  return chrome.tabs.sendMessage(tabId, message);
+  return chrome.tabs.sendMessage(tabId, message) as Promise<T>;
 }
 
 async function injectContentScript(tabId: number): Promise<void> {

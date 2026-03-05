@@ -23,7 +23,7 @@ import type {
   InputDataPacket,
   FileConfig,
 } from "@/shared/types";
-import type { ExtensionMessage } from "@/shared/messages";
+import type { ExtensionMessage, SelectionResultMessage, FormFieldsResultMessage } from "@/shared/messages";
 import { sendToTab } from "@/shared/tab-messaging";
 import { HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
 import { needsFileInput, needsAudioInput, formatFileSize, friendlyError, categoryIcon } from "./utils";
@@ -241,7 +241,7 @@ export function App() {
     for (const source of recipe.collect) {
       switch (source) {
         case "text_selection": {
-          const sel = await sendToTab(tabId, { type: "GET_SELECTION" });
+          const sel = await sendToTab<SelectionResultMessage>(tabId, { type: "GET_SELECTION" });
           packet.text = sel?.text ?? "";
           if (!packet.context) {
             packet.context = { url: sel?.url ?? "", title: sel?.title ?? "" };
@@ -257,7 +257,7 @@ export function App() {
           break;
         case "form_fields":
           if (recipe.form_fields?.length) {
-            const res = await sendToTab(tabId, {
+            const res = await sendToTab<FormFieldsResultMessage>(tabId, {
               type: "GET_FORM_FIELDS",
               fields: recipe.form_fields,
             });
@@ -266,7 +266,7 @@ export function App() {
           break;
         case "page_context": {
           if (!packet.context) {
-            const ctx = await sendToTab(tabId, { type: "GET_SELECTION" });
+            const ctx = await sendToTab<SelectionResultMessage>(tabId, { type: "GET_SELECTION" });
             packet.context = {
               url: ctx?.url ?? "",
               title: ctx?.title ?? "",
@@ -385,7 +385,7 @@ export function App() {
       if (workflow.recipe) {
         inputData = await collectInputData(workflow.recipe, tab.id);
       } else {
-        const response = await sendToTab(tab.id, { type: "GET_SELECTION" });
+        const response = await sendToTab<SelectionResultMessage>(tab.id, { type: "GET_SELECTION" });
         inputData = {
           text: response?.text ?? "",
           context: { url: response?.url ?? "", title: response?.title ?? "" },

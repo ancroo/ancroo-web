@@ -1,7 +1,7 @@
 import { executeWorkflow, listWorkflows, fetchHotkeySettings } from "@/shared/api-client";
 import { sendToTab } from "@/shared/tab-messaging";
 import { buildHotkeyBindings, HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
-import type { ExtensionMessage } from "@/shared/messages";
+import type { ExtensionMessage, SelectionResultMessage, FormFieldsResultMessage } from "@/shared/messages";
 import type { Workflow, HistoryEntry, HotkeyBinding } from "@/shared/types";
 
 // Allow content scripts to read chrome.storage.session (required for hotkey bindings)
@@ -236,7 +236,7 @@ async function handleHotkeyExecution(
   // Simple text workflow: execute directly from background
   let response;
   try {
-    response = await sendToTab(tab.id, {
+    response = await sendToTab<SelectionResultMessage>(tab.id, {
       type: "GET_SELECTION",
     } as ExtensionMessage);
   } catch {
