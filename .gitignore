@@ -1,0 +1,22 @@
+node_modules/
+dist/
+.crxjs/
+.env
+.env.*
+!.env.example
+*.log
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Packaging artifacts
+*.crx
+*.zip
+
+# Test output
+coverage/
+
+# Claude Code
+.claude/

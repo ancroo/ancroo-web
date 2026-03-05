@@ -1,0 +1,36 @@
+{
+  "name": "ancroo-web",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "description": "Ancroo — AI Workflow Browser Extension",
+  "author": "Stefan Schmidbauer <Stefan-Schmidbauer@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Stefan-Schmidbauer/ancroo-web.git"
+  },
+  "homepage": "https://github.com/Stefan-Schmidbauer/ancroo-web",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "preact": "^10.28.4"
+  },
+  "devDependencies": {
+    "@crxjs/vite-plugin": "^2.0.0-beta.28",
+    "@eslint/js": "^10.0.1",
+    "@preact/preset-vite": "^2.9.0",
+    "@tailwindcss/vite": "^4.2.0",
+    "@types/chrome": "^0.1.36",
+    "eslint": "^10.0.0",
+    "tailwindcss": "4",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.56.0",
+    "vite": "^5.4.11"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
