@@ -243,6 +243,7 @@ export function App() {
         case "text_selection": {
           const sel = await sendToTab<SelectionResultMessage>(tabId, { type: "GET_SELECTION" });
           packet.text = sel?.text ?? "";
+          packet.html = sel?.html ?? "";
           if (!packet.context) {
             packet.context = { url: sel?.url ?? "", title: sel?.title ?? "" };
           }
@@ -388,6 +389,7 @@ export function App() {
         const response = await sendToTab<SelectionResultMessage>(tab.id, { type: "GET_SELECTION" });
         inputData = {
           text: response?.text ?? "",
+          html: response?.html ?? "",
           context: { url: response?.url ?? "", title: response?.title ?? "" },
         };
       }

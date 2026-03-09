@@ -255,6 +255,7 @@ async function handleHotkeyExecution(
   try {
     const result = await executeWorkflow(workflowSlug, {
       text: response.text,
+      html: response.html,
       context: { url: response.url, title: response.title },
     });
 

@@ -16,6 +16,7 @@ export interface CollectionRecipe {
 /** Data packet sent to the server when executing a workflow. */
 export interface InputDataPacket {
   text?: string;
+  html?: string;
   clipboard?: string;
   fields?: Record<string, string>;
   context?: { url: string; title: string };

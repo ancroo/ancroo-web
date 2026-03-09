@@ -94,10 +94,18 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (message.type === "GET_SELECTION") {
-      const selection = window.getSelection()?.toString() ?? "";
+      const sel = window.getSelection();
+      const text = sel?.toString() ?? "";
+      let html = "";
+      if (sel && sel.rangeCount > 0) {
+        const container = document.createElement("div");
+        container.appendChild(sel.getRangeAt(0).cloneContents());
+        html = container.innerHTML;
+      }
       sendResponse({
         type: "SELECTION_RESULT",
-        text: selection,
+        text,
+        html,
         url: window.location.href,
         title: document.title,
       });

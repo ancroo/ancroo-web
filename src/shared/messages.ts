@@ -7,6 +7,7 @@ export interface GetSelectionMessage {
 export interface SelectionResultMessage {
   type: "SELECTION_RESULT";
   text: string;
+  html: string;
   url: string;
   title: string;
 }
