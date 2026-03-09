@@ -1,6 +1,6 @@
 # Security Policy
 
-For the overall Ancroo security policy, roadmap, and Phase 1 limitations, see the [central security policy](https://github.com/Stefan-Schmidbauer/ancroo/blob/main/SECURITY.md).
+For the overall Ancroo security policy, roadmap, and Phase 1 limitations, see the [central security policy](https://github.com/ancroo/ancroo/blob/main/SECURITY.md).
 
 ## Extension-Specific Notes
 
@@ -11,6 +11,6 @@ For the overall Ancroo security policy, roadmap, and Phase 1 limitations, see th
 
 ## Reporting a Vulnerability
 
-Please report security vulnerabilities through [GitHub's private vulnerability reporting](https://github.com/Stefan-Schmidbauer/ancroo-web/security/advisories/new).
+Please report security vulnerabilities through [GitHub's private vulnerability reporting](https://github.com/ancroo/ancroo-web/security/advisories/new).
 
 Do not open a public issue for security vulnerabilities.

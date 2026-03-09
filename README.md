@@ -55,7 +55,7 @@ graph LR
 
 Every push to `main` automatically builds the extension via GitHub Actions. Download the latest artifact without building locally:
 
-1. Open [Actions](https://github.com/Stefan-Schmidbauer/ancroo-web/actions/workflows/build.yml)
+1. Open [Actions](https://github.com/ancroo/ancroo-web/actions/workflows/build.yml)
 2. Click the latest successful run
 3. Download the **ancroo-web-extension** artifact
 4. Unzip it — you get a `dist/` folder
@@ -100,7 +100,7 @@ src/
 
 ## Backend
 
-This extension requires [Ancroo Stack](https://github.com/Stefan-Schmidbauer/ancroo-stack) with the `ancroo` module enabled:
+This extension requires [Ancroo Stack](https://github.com/ancroo/ancroo-stack) with the `ancroo` module enabled:
 
 ```bash
 ./module.sh enable ancroo
@@ -108,11 +108,11 @@ This extension requires [Ancroo Stack](https://github.com/Stefan-Schmidbauer/anc
 
 ## Contributing
 
-Contributions are welcome! Feel free to open an [issue](https://github.com/Stefan-Schmidbauer/ancroo-web/issues) or submit a pull request.
+Contributions are welcome! Feel free to open an [issue](https://github.com/ancroo/ancroo-web/issues) or submit a pull request.
 
 ## Security
 
-To report a security vulnerability, please use [GitHub's private vulnerability reporting](https://github.com/Stefan-Schmidbauer/ancroo-web/security/advisories/new) instead of opening a public issue.
+To report a security vulnerability, please use [GitHub's private vulnerability reporting](https://github.com/ancroo/ancroo-web/security/advisories/new) instead of opening a public issue.
 
 ## License
 

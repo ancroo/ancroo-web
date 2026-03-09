@@ -7,9 +7,9 @@
   "author": "Stefan Schmidbauer <Stefan-Schmidbauer@users.noreply.github.com>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Stefan-Schmidbauer/ancroo-web.git"
+    "url": "git+https://github.com/ancroo/ancroo-web.git"
   },
-  "homepage": "https://github.com/Stefan-Schmidbauer/ancroo-web",
+  "homepage": "https://github.com/ancroo/ancroo-web",
   "type": "module",
   "scripts": {
     "dev": "vite",

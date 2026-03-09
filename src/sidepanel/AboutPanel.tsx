@@ -50,7 +50,7 @@ export function AboutPanel({ onClose }: { onClose: () => void }) {
           <div class="flex justify-between px-3 py-2.5">
             <span class="text-sm text-gray-500">Source</span>
             <a
-              href="https://github.com/Stefan-Schmidbauer/ancroo-web"
+              href="https://github.com/ancroo/ancroo-web"
               target="_blank"
               rel="noopener noreferrer"
               class="text-sm text-blue-600 hover:text-blue-700"
