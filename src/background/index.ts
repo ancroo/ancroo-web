@@ -273,7 +273,7 @@ async function handleHotkeyExecution(
     if (result.result?.success && result.result.text) {
       const action = workflow.output_action ?? result.result.action ?? "none";
 
-      if (action === "replace_selection") {
+      if (action === "replace_selection" || action === "insert_text") {
         await sendToTab(tab.id, {
           type: "INSERT_TEXT",
           text: result.result.text,
@@ -296,11 +296,14 @@ async function handleHotkeyExecution(
         await tryOpenSidePanel(tab.id);
       }
     } else {
+      const errorDetail = result.result?.error
+        ? `${workflow.name}: ${result.result.error}`
+        : `${workflow.name} failed`;
       await sendToTab(tab.id, {
         type: "SHOW_TOAST",
-        text: `${workflow.name} failed`,
+        text: errorDetail,
         variant: "error",
-        duration: 3000,
+        duration: 4000,
       } as ExtensionMessage);
     }
   } catch (error) {

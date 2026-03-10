@@ -289,16 +289,36 @@ export function App() {
     resultText: string,
     tabId: number
   ) {
+    console.debug("[ancroo] applyAction:", action);
     switch (action) {
       case "replace_selection":
+      case "insert_text":
         await sendToTab(tabId, {
           type: "INSERT_TEXT",
           text: resultText,
         });
+        await sendToTab(tabId, {
+          type: "SHOW_TOAST",
+          text: "Text inserted",
+          variant: "success",
+          duration: 2000,
+        } as ExtensionMessage);
         break;
       case "clipboard":
       case "copy_to_clipboard":
-        await navigator.clipboard.writeText(resultText);
+        try {
+          await navigator.clipboard.writeText(resultText);
+          await sendToTab(tabId, {
+            type: "SHOW_TOAST",
+            text: "Copied to clipboard",
+            variant: "success",
+            duration: 2000,
+          } as ExtensionMessage);
+        } catch (err) {
+          console.error("[ancroo] Clipboard write failed:", err);
+          // Show result in panel as fallback — never replace selection
+          setResultText(resultText);
+        }
         break;
       case "notification":
         // Shown in-panel via result display
@@ -413,7 +433,16 @@ export function App() {
       if (result.result?.success && result.result.text) {
         const action =
           workflow.output_action ?? result.result.action ?? "none";
+
+        if (action !== "replace_selection" && action !== "insert_text") {
+          // Show result in panel for clipboard/notification actions
+          setResultText(result.result.text);
+          setResultWorkflowName(workflow.name);
+        }
+
         await applyAction(action, result.result.text, tab.id);
+      } else if (result.result && !result.result.success) {
+        setError(result.result.error ?? `${workflow.name} failed`);
       }
     } catch (err) {
       console.error("Execution failed:", err);
@@ -640,6 +669,16 @@ export function App() {
               Sign out
             </button>
           )}
+          <button
+            onClick={() => loadData()}
+            class="text-gray-400 hover:text-gray-600"
+            title="Reload workflows"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10" />
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+            </svg>
+          </button>
           <button
             onClick={() => setSetupDone(false)}
             class="text-xs text-gray-400 hover:text-gray-600"

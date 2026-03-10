@@ -24,7 +24,6 @@ export function RecordingArea({
 }: RecordingAreaProps) {
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [readyToRecord, setReadyToRecord] = useState(autoStart ?? false);
   const [micError, setMicError] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
@@ -39,13 +38,24 @@ export function RecordingArea({
     };
   }, []);
 
-  // Auto-start recording when triggered via hotkey and mic permission
-  // is already granted.  getUserMedia() succeeds without a user gesture
-  // in extension side panels when the permission was previously granted.
-  // If it fails (first-time permission), fall back to showing the button.
+  // Auto-start recording when triggered via hotkey OR when mic permission
+  // is already granted (so the user doesn't have to click "Start Recording"
+  // every time after the initial permission grant).
   useEffect(() => {
     if (autoStart) {
       handleStart();
+    } else {
+      // Check if mic permission is already granted — if so, start immediately
+      navigator.permissions
+        ?.query({ name: "microphone" as PermissionName })
+        .then((status) => {
+          if (status.state === "granted") {
+            handleStart();
+          }
+        })
+        .catch(() => {
+          // permissions API not available — show button as fallback
+        });
     }
   }, [autoStart]);
 
@@ -64,7 +74,6 @@ export function RecordingArea({
   }
 
   async function handleStart() {
-    setReadyToRecord(false);
     setMicError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -150,7 +159,6 @@ export function RecordingArea({
         <button
           onClick={() => {
             setMicError(null);
-            setReadyToRecord(true);
           }}
           class="w-full bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 transition text-xs"
         >
@@ -184,24 +192,13 @@ export function RecordingArea({
     <div class="text-center py-4">
       <button
         onClick={handleStart}
-        class={`text-white px-6 py-2 rounded-lg transition text-sm ${
-          readyToRecord
-            ? "bg-blue-600 hover:bg-blue-700 ring-2 ring-blue-400 ring-offset-1 animate-pulse"
-            : "bg-blue-600 hover:bg-blue-700"
-        }`}
+        class="text-white px-6 py-2 rounded-lg transition text-sm bg-blue-600 hover:bg-blue-700"
       >
-        {readyToRecord ? "Tap to record" : "Start Recording"}
+        Start Recording
       </button>
-      {readyToRecord && (
-        <div class="text-xs text-blue-500 mt-1">
-          Click to allow microphone access
-        </div>
-      )}
-      {!readyToRecord && (
-        <div class="text-xs text-gray-400 mt-2">
-          Or use Alt+Shift+R to toggle
-        </div>
-      )}
+      <div class="text-xs text-gray-400 mt-2">
+        Or use Alt+Shift+R to toggle
+      </div>
     </div>
   );
 }

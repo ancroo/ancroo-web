@@ -76,10 +76,25 @@ async function apiFetch<T>(
       );
     }
 
-    throw new Error(`API error ${response.status}: ${body}`);
+    // FastAPI returns {"detail": "..."} for HTTP errors — extract it
+    const detail = extractDetail(body);
+    throw new Error(detail ?? `API error ${response.status}: ${body}`);
   }
 
   return response.json();
+}
+
+/** Try to extract a human-readable detail from a JSON error body. */
+function extractDetail(body: string): string | null {
+  try {
+    const parsed = JSON.parse(body);
+    if (typeof parsed.detail === "string") return parsed.detail;
+    if (typeof parsed.error === "string") return parsed.error;
+    if (typeof parsed.message === "string") return parsed.message;
+  } catch {
+    // Not JSON — ignore
+  }
+  return null;
 }
 
 /** List all accessible workflows. */
@@ -145,7 +160,8 @@ export async function executeWorkflowWithFile(
       } else if (xhr.status === 401) {
         reject(new Error("Not logged in. Please sign in to your Ancroo server first."));
       } else {
-        reject(new Error(`API error ${xhr.status}: ${xhr.responseText}`));
+        const detail = extractDetail(xhr.responseText);
+        reject(new Error(detail ?? `API error ${xhr.status}: ${xhr.responseText}`));
       }
     });
 
