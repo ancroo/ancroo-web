@@ -142,6 +142,45 @@ chrome.runtime.onMessage.addListener(
       return true;
     }
 
+    if (message.type === "SET_FORM_FIELDS") {
+      const errors: string[] = [];
+      let setCount = 0;
+      for (const [key, { selector, value }] of Object.entries(message.fields)) {
+        try {
+          const el = document.querySelector(selector);
+          if (!el) {
+            errors.push(`No element found for "${key}" (${selector})`);
+            continue;
+          }
+          if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+            const proto = el instanceof HTMLTextAreaElement
+              ? HTMLTextAreaElement.prototype
+              : HTMLInputElement.prototype;
+            const nativeSetter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+            if (nativeSetter) {
+              nativeSetter.call(el, value);
+            } else {
+              el.value = value;
+            }
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+            setCount++;
+          } else if (el instanceof HTMLSelectElement) {
+            el.value = value;
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+            setCount++;
+          } else {
+            el.textContent = value;
+            setCount++;
+          }
+        } catch (err) {
+          errors.push(`Error setting "${key}": ${err}`);
+        }
+      }
+      sendResponse({ type: "SET_FORM_FIELDS_RESULT", success: errors.length === 0, set_count: setCount, errors });
+      return true;
+    }
+
     // Recording is started via chrome.scripting.executeScript from the side panel,
     // which stores MediaRecorder state in globalThis.__ancrooRecording (isolated world shared).
     if (message.type === "STOP_RECORDING") {

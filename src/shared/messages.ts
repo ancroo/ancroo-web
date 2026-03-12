@@ -64,6 +64,18 @@ export interface HideToastMessage {
   type: "HIDE_TOAST";
 }
 
+export interface SetFormFieldsMessage {
+  type: "SET_FORM_FIELDS";
+  fields: Record<string, { selector: string; value: string }>;
+}
+
+export interface SetFormFieldsResultMessage {
+  type: "SET_FORM_FIELDS_RESULT";
+  success: boolean;
+  set_count: number;
+  errors: string[];
+}
+
 export type ExtensionMessage =
   | GetSelectionMessage
   | SelectionResultMessage
@@ -76,4 +88,6 @@ export type ExtensionMessage =
   | CancelRecordingMessage
   | ExecuteHotkeyWorkflowMessage
   | ShowToastMessage
-  | HideToastMessage;
+  | HideToastMessage
+  | SetFormFieldsMessage
+  | SetFormFieldsResultMessage;

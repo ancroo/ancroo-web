@@ -287,7 +287,8 @@ export function App() {
   async function applyAction(
     action: string,
     resultText: string,
-    tabId: number
+    tabId: number,
+    outputFields?: { name: string; selector: string }[]
   ) {
     console.debug("[ancroo] applyAction:", action);
     switch (action) {
@@ -318,6 +319,33 @@ export function App() {
           console.error("[ancroo] Clipboard write failed:", err);
           // Show result in panel as fallback — never replace selection
           setResultText(resultText);
+        }
+        break;
+      case "fill_fields":
+        try {
+          const resultData = JSON.parse(resultText);
+          if (!outputFields || outputFields.length === 0) {
+            console.warn("[ancroo] fill_fields action but no output_fields in recipe");
+            break;
+          }
+          const fieldsToSet: Record<string, { selector: string; value: string }> = {};
+          for (const field of outputFields) {
+            if (field.name in resultData) {
+              fieldsToSet[field.name] = {
+                selector: field.selector,
+                value: String(resultData[field.name]),
+              };
+            }
+          }
+          await sendToTab(tabId, { type: "SET_FORM_FIELDS", fields: fieldsToSet } as ExtensionMessage);
+          await sendToTab(tabId, {
+            type: "SHOW_TOAST",
+            text: "Fields updated",
+            variant: "success",
+            duration: 2000,
+          } as ExtensionMessage);
+        } catch (err) {
+          console.error("[ancroo] fill_fields parse error:", err);
         }
         break;
       case "notification":
@@ -435,12 +463,12 @@ export function App() {
           workflow.output_action ?? result.result.action ?? "none";
 
         if (action !== "replace_selection" && action !== "insert_text") {
-          // Show result in panel for clipboard/notification actions
+          // Show result in panel for clipboard/notification/fill_fields actions
           setResultText(result.result.text);
           setResultWorkflowName(workflow.name);
         }
 
-        await applyAction(action, result.result.text, tab.id);
+        await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields);
       } else if (result.result && !result.result.success) {
         setError(result.result.error ?? `${workflow.name} failed`);
       }
@@ -507,7 +535,7 @@ export function App() {
         // Also apply the configured action
         const action = workflow.output_action ?? result.result.action ?? "none";
         if (tab?.id) {
-          await applyAction(action, result.result.text, tab.id);
+          await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields);
         }
       } else if (result.result?.error) {
         setFileError(result.result.error);

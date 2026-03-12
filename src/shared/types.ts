@@ -10,6 +10,7 @@ export interface FileConfig {
 export interface CollectionRecipe {
   collect: ("text_selection" | "clipboard" | "form_fields" | "page_context" | "file" | "audio")[];
   form_fields?: { name: string; selector: string }[];
+  output_fields?: { name: string; selector: string }[];
   file_config?: FileConfig;
 }
 
@@ -45,7 +46,7 @@ export interface Workflow {
 /** Result from executing a workflow. */
 export interface ExecutionResult {
   text: string | null;
-  action: "replace_selection" | "copy_to_clipboard" | "notification" | "none";
+  action: "replace_selection" | "copy_to_clipboard" | "notification" | "fill_fields" | "none";
   success: boolean;
   error: string | null;
   metadata: Record<string, unknown>;
