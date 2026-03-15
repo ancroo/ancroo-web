@@ -17,6 +17,7 @@ dist/
 
 # Test output
 coverage/
+testpages/screenshots/
 
 # Claude Code
 .claude/
