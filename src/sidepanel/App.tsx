@@ -26,7 +26,7 @@ import type {
 import type { ExtensionMessage, SelectionResultMessage, FormFieldsResultMessage } from "@/shared/messages";
 import { sendToTab } from "@/shared/tab-messaging";
 import { HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
-import { needsFileInput, needsAudioInput, formatFileSize, friendlyError, categoryIcon } from "./utils";
+import { needsFileInput, needsAudioInput, needsManualInput, formatFileSize, friendlyError, categoryIcon } from "./utils";
 import { RecordingArea } from "./RecordingArea";
 import { HistoryItem } from "./HistoryItem";
 import { FileUploadArea } from "./FileUploadArea";
@@ -57,6 +57,9 @@ export function App() {
   const [autoStartRecording, setAutoStartRecording] = useState(false);
   const [stopRecordingSignal, setStopRecordingSignal] = useState(0);
   const [micDeviceId, setMicDeviceId] = useState<string | undefined>();
+
+  // Manual input state
+  const [manualInputText, setManualInputText] = useState("");
 
   // About panel state
   const [showAbout, setShowAbout] = useState(false);
@@ -275,6 +278,9 @@ export function App() {
           }
           break;
         }
+        case "manual_input":
+          packet.text = manualInputText;
+          break;
         case "file":
         case "audio":
           // Handled separately via file upload / recording UI
@@ -288,7 +294,8 @@ export function App() {
     action: string,
     resultText: string,
     tabId: number,
-    outputFields?: { name: string; selector: string }[]
+    outputFields?: { name: string; selector: string }[],
+    metadata?: Record<string, unknown>
   ) {
     console.debug("[ancroo] applyAction:", action);
     switch (action) {
@@ -348,6 +355,58 @@ export function App() {
           console.error("[ancroo] fill_fields parse error:", err);
         }
         break;
+      case "insert_before":
+        await sendToTab(tabId, {
+          type: "INSERT_BEFORE",
+          text: resultText,
+        });
+        await sendToTab(tabId, {
+          type: "SHOW_TOAST",
+          text: "Text inserted before selection",
+          variant: "success",
+          duration: 2000,
+        } as ExtensionMessage);
+        break;
+      case "insert_after":
+        await sendToTab(tabId, {
+          type: "INSERT_AFTER",
+          text: resultText,
+        });
+        await sendToTab(tabId, {
+          type: "SHOW_TOAST",
+          text: "Text inserted after selection",
+          variant: "success",
+          duration: 2000,
+        } as ExtensionMessage);
+        break;
+      case "download_file": {
+        const filename = (metadata?.filename as string) || "download";
+        const mimeType = (metadata?.mime_type as string) || "application/octet-stream";
+        try {
+          const byteChars = atob(resultText);
+          const byteArray = new Uint8Array(byteChars.length);
+          for (let i = 0; i < byteChars.length; i++) {
+            byteArray[i] = byteChars.charCodeAt(i);
+          }
+          const blob = new Blob([byteArray], { type: mimeType });
+          const url = URL.createObjectURL(blob);
+          await chrome.downloads.download({ url, filename, saveAs: true });
+          URL.revokeObjectURL(url);
+          await sendToTab(tabId, {
+            type: "SHOW_TOAST",
+            text: `Download: ${filename}`,
+            variant: "success",
+            duration: 3000,
+          } as ExtensionMessage);
+        } catch (err) {
+          console.error("[ancroo] download_file failed:", err);
+          setError("Download failed");
+        }
+        break;
+      }
+      case "side_panel_only":
+        // Only shown in-panel, no page action
+        break;
       case "notification":
         // Shown in-panel via result display
         break;
@@ -382,19 +441,20 @@ export function App() {
   }
 
   async function handleExecute(workflow: Workflow) {
-    // If this workflow needs a file or audio, show the appropriate input area
-    if (needsFileInput(workflow) || needsAudioInput(workflow)) {
-      if (pendingWorkflow?.slug === workflow.slug) {
-        // Toggle off
+    // If this workflow needs a file, audio, or manual input, show the appropriate input area
+    if (needsFileInput(workflow) || needsAudioInput(workflow) || needsManualInput(workflow)) {
+      if (pendingWorkflow?.slug === workflow.slug && !needsManualInput(workflow)) {
+        // Toggle off (but not for manual input — that submits via button)
         setPendingWorkflow(null);
         setSelectedFile(null);
         setFileError(null);
         setAutoStartRecording(false);
-      } else {
+      } else if (pendingWorkflow?.slug !== workflow.slug) {
         setPendingWorkflow(workflow);
         setSelectedFile(null);
         setFileError(null);
         setAutoStartRecording(false);
+        setManualInputText("");
       }
       return;
     }
@@ -462,13 +522,19 @@ export function App() {
         const action =
           workflow.output_action ?? result.result.action ?? "none";
 
-        if (action !== "replace_selection" && action !== "insert_text") {
-          // Show result in panel for clipboard/notification/fill_fields actions
+        if (
+          action !== "replace_selection" &&
+          action !== "insert_text" &&
+          action !== "insert_before" &&
+          action !== "insert_after" &&
+          action !== "download_file"
+        ) {
+          // Show result in panel for clipboard/notification/side_panel_only/fill_fields actions
           setResultText(result.result.text);
           setResultWorkflowName(workflow.name);
         }
 
-        await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields);
+        await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields, result.result.metadata);
       } else if (result.result && !result.result.success) {
         setError(result.result.error ?? `${workflow.name} failed`);
       }
@@ -529,13 +595,16 @@ export function App() {
 
       // Show result
       if (result.result?.success && result.result.text) {
-        setResultText(result.result.text);
-        setResultWorkflowName(workflow.name);
+        const action = workflow.output_action ?? result.result.action ?? "none";
+
+        if (action !== "download_file") {
+          setResultText(result.result.text);
+          setResultWorkflowName(workflow.name);
+        }
 
         // Also apply the configured action
-        const action = workflow.output_action ?? result.result.action ?? "none";
         if (tab?.id) {
-          await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields);
+          await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields, result.result.metadata);
         }
       } else if (result.result?.error) {
         setFileError(result.result.error);
@@ -735,6 +804,7 @@ export function App() {
           {categoryWorkflows.map((workflow) => {
             const isFile = needsFileInput(workflow);
             const isAudio = needsAudioInput(workflow);
+            const isManual = needsManualInput(workflow);
             const isPending = pendingWorkflow?.slug === workflow.slug;
             const isExecuting = executing === workflow.slug;
 
@@ -762,6 +832,9 @@ export function App() {
                     )}
                     {isFile && (
                       <span class="text-xs text-purple-500">File upload</span>
+                    )}
+                    {isManual && (
+                      <span class="text-xs text-teal-500">Manual input</span>
                     )}
                   </div>
                   {isExecuting && !isFile && !isAudio && (
@@ -838,6 +911,46 @@ export function App() {
                             setPendingWorkflow(null);
                             setSelectedFile(null);
                             setFileError(null);
+                          }}
+                          class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Manual text input area */}
+                {isPending && isManual && !isFile && !isAudio && (
+                  <div class="mt-1 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <textarea
+                      value={manualInputText}
+                      onInput={(e) => setManualInputText((e.target as HTMLTextAreaElement).value)}
+                      placeholder="Enter text..."
+                      class="w-full p-2 bg-white border rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-300"
+                      rows={4}
+                      disabled={isExecuting}
+                    />
+                    {isExecuting && (
+                      <div class="flex items-center gap-2 text-xs text-amber-600 mt-1">
+                        <span class="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Processing with AI...</span>
+                      </div>
+                    )}
+                    {!isExecuting && (
+                      <div class="flex gap-2 mt-2">
+                        <button
+                          onClick={() => executeTextWorkflow(workflow)}
+                          disabled={!manualInputText.trim()}
+                          class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
+                        >
+                          Run
+                        </button>
+                        <button
+                          onClick={() => {
+                            setPendingWorkflow(null);
+                            setManualInputText("");
                           }}
                           class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
                         >

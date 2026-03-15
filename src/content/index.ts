@@ -1,7 +1,7 @@
 import type { ExtensionMessage } from "@/shared/messages";
 import { matchesEvent, HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
 import type { HotkeyBinding } from "@/shared/types";
-import { smartInsertText } from "./text-inserter";
+import { smartInsertText, smartInsertBefore, smartInsertAfter } from "./text-inserter";
 
 // --- Hotkey handling ---
 
@@ -120,6 +120,20 @@ chrome.runtime.onMessage.addListener(
         });
       });
       return true; // keep channel open for async sendResponse
+    }
+
+    if (message.type === "INSERT_BEFORE") {
+      smartInsertBefore(message.text).then((success) => {
+        sendResponse({ type: "INSERT_RESULT", success });
+      });
+      return true;
+    }
+
+    if (message.type === "INSERT_AFTER") {
+      smartInsertAfter(message.text).then((success) => {
+        sendResponse({ type: "INSERT_RESULT", success });
+      });
+      return true;
     }
 
     if (message.type === "GET_FORM_FIELDS") {

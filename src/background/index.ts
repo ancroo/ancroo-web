@@ -207,6 +207,7 @@ async function handleHotkeyExecution(
   const collectSources = workflow.recipe?.collect ?? [];
   const needsAudio = collectSources.includes("audio");
   const needsFile = collectSources.includes("file");
+  const needsManual = collectSources.includes("manual_input");
   const needsComplexInput =
     collectSources.includes("clipboard") || collectSources.includes("form_fields");
 
@@ -228,7 +229,7 @@ async function handleHotkeyExecution(
     return;
   }
 
-  if (needsComplexInput) {
+  if (needsManual || needsComplexInput) {
     await chrome.storage.session.set({ pendingWorkflowSlug: workflowSlug });
     return;
   }
@@ -284,7 +285,29 @@ async function handleHotkeyExecution(
           variant: "success",
           duration: 2000,
         } as ExtensionMessage);
-      } else if (action === "copy_to_clipboard" || action === "clipboard" || action === "notification") {
+      } else if (action === "insert_before") {
+        await sendToTab(tab.id, {
+          type: "INSERT_BEFORE",
+          text: result.result.text,
+        } as ExtensionMessage);
+        await sendToTab(tab.id, {
+          type: "SHOW_TOAST",
+          text: workflow.name,
+          variant: "success",
+          duration: 2000,
+        } as ExtensionMessage);
+      } else if (action === "insert_after") {
+        await sendToTab(tab.id, {
+          type: "INSERT_AFTER",
+          text: result.result.text,
+        } as ExtensionMessage);
+        await sendToTab(tab.id, {
+          type: "SHOW_TOAST",
+          text: workflow.name,
+          variant: "success",
+          duration: 2000,
+        } as ExtensionMessage);
+      } else if (action === "side_panel_only" || action === "copy_to_clipboard" || action === "clipboard" || action === "notification") {
         // Clipboard is not available in service workers — show in side panel
         await chrome.storage.session.set({
           pendingResult: {

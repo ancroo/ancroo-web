@@ -17,6 +17,16 @@ export interface InsertTextMessage {
   text: string;
 }
 
+export interface InsertBeforeMessage {
+  type: "INSERT_BEFORE";
+  text: string;
+}
+
+export interface InsertAfterMessage {
+  type: "INSERT_AFTER";
+  text: string;
+}
+
 export interface InsertResultMessage {
   type: "INSERT_RESULT";
   success: boolean;
@@ -80,6 +90,8 @@ export type ExtensionMessage =
   | GetSelectionMessage
   | SelectionResultMessage
   | InsertTextMessage
+  | InsertBeforeMessage
+  | InsertAfterMessage
   | InsertResultMessage
   | GetFormFieldsMessage
   | FormFieldsResultMessage

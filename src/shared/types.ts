@@ -8,7 +8,7 @@ export interface FileConfig {
 
 /** Collection recipe — instructions from the server on what data to collect. */
 export interface CollectionRecipe {
-  collect: ("text_selection" | "clipboard" | "form_fields" | "page_context" | "file" | "audio")[];
+  collect: ("text_selection" | "clipboard" | "form_fields" | "page_context" | "file" | "audio" | "manual_input")[];
   form_fields?: { name: string; selector: string }[];
   output_fields?: { name: string; selector: string }[];
   file_config?: FileConfig;
@@ -46,7 +46,7 @@ export interface Workflow {
 /** Result from executing a workflow. */
 export interface ExecutionResult {
   text: string | null;
-  action: "replace_selection" | "copy_to_clipboard" | "notification" | "fill_fields" | "none";
+  action: "replace_selection" | "copy_to_clipboard" | "notification" | "fill_fields" | "none" | "insert_before" | "insert_after" | "side_panel_only" | "download_file";
   success: boolean;
   error: string | null;
   metadata: Record<string, unknown>;

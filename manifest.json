@@ -11,7 +11,8 @@
     "clipboardRead",
     "clipboardWrite",
     "contextMenus",
-    "identity"
+    "identity",
+    "downloads"
   ],
   "background": {
     "service_worker": "src/background/index.ts",

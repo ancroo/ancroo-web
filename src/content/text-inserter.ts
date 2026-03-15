@@ -84,6 +84,109 @@ function insertIntoInput(
   return false;
 }
 
+/**
+ * Insert text before the current selection without replacing it.
+ * Returns true if insertion was successful.
+ */
+export async function smartInsertBefore(text: string): Promise<boolean> {
+  const activeElement = document.activeElement;
+
+  if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+    const start = activeElement.selectionStart ?? 0;
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      activeElement instanceof HTMLTextAreaElement
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype,
+      "value"
+    )?.set;
+    if (nativeSetter) {
+      const val = activeElement.value;
+      nativeSetter.call(activeElement, val.substring(0, start) + text + "\n" + val.substring(start));
+      activeElement.dispatchEvent(new Event("input", { bubbles: true }));
+      activeElement.dispatchEvent(new Event("change", { bubbles: true }));
+      activeElement.setSelectionRange(start, start);
+      return true;
+    }
+    return false;
+  }
+
+  // Contenteditable / window selection
+  const selection = window.getSelection();
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const editableParent = (container instanceof Element ? container : container.parentElement)
+      ?.closest("[contenteditable='true']");
+    if (editableParent || (activeElement && activeElement.getAttribute("contenteditable") === "true")) {
+      const insertRange = document.createRange();
+      insertRange.setStart(range.startContainer, range.startOffset);
+      insertRange.collapse(true);
+      // Insert text + <br> separator before the original selection
+      const br = document.createElement("br");
+      insertRange.insertNode(br);
+      const textNode = document.createTextNode(text);
+      insertRange.insertNode(textNode);
+      // Move cursor before the inserted text
+      selection.collapse(textNode, 0);
+      return true;
+    }
+  }
+
+  return copyToClipboard(text);
+}
+
+/**
+ * Insert text after the current selection without replacing it.
+ * Returns true if insertion was successful.
+ */
+export async function smartInsertAfter(text: string): Promise<boolean> {
+  const activeElement = document.activeElement;
+
+  if (activeElement instanceof HTMLInputElement || activeElement instanceof HTMLTextAreaElement) {
+    const end = activeElement.selectionEnd ?? activeElement.value.length;
+    const nativeSetter = Object.getOwnPropertyDescriptor(
+      activeElement instanceof HTMLTextAreaElement
+        ? HTMLTextAreaElement.prototype
+        : HTMLInputElement.prototype,
+      "value"
+    )?.set;
+    if (nativeSetter) {
+      const val = activeElement.value;
+      nativeSetter.call(activeElement, val.substring(0, end) + "\n" + text + val.substring(end));
+      activeElement.dispatchEvent(new Event("input", { bubbles: true }));
+      activeElement.dispatchEvent(new Event("change", { bubbles: true }));
+      const newPos = end + 1 + text.length;
+      activeElement.setSelectionRange(newPos, newPos);
+      return true;
+    }
+    return false;
+  }
+
+  // Contenteditable / window selection
+  const selection = window.getSelection();
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0);
+    const container = range.commonAncestorContainer;
+    const editableParent = (container instanceof Element ? container : container.parentElement)
+      ?.closest("[contenteditable='true']");
+    if (editableParent || (activeElement && activeElement.getAttribute("contenteditable") === "true")) {
+      const insertRange = document.createRange();
+      insertRange.setStart(range.endContainer, range.endOffset);
+      insertRange.collapse(true);
+      // Insert <br> separator + text after the original selection
+      const textNode = document.createTextNode(text);
+      insertRange.insertNode(textNode);
+      const br = document.createElement("br");
+      insertRange.insertNode(br);
+      // Move cursor after the inserted text
+      selection.collapse(textNode, textNode.length);
+      return true;
+    }
+  }
+
+  return copyToClipboard(text);
+}
+
 /** Fallback: copy text to clipboard. */
 async function copyToClipboard(text: string): Promise<boolean> {
   try {

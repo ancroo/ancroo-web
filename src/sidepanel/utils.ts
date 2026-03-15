@@ -10,6 +10,11 @@ export function needsAudioInput(workflow: Workflow): boolean {
   return workflow.recipe?.collect.includes("audio") ?? false;
 }
 
+/** Check if a workflow requires manual text input. */
+export function needsManualInput(workflow: Workflow): boolean {
+  return workflow.recipe?.collect.includes("manual_input") ?? false;
+}
+
 /** Format file size for display. */
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
