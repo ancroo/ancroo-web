@@ -8,7 +8,7 @@ export interface FileConfig {
 
 /** Collection recipe — instructions from the server on what data to collect. */
 export interface CollectionRecipe {
-  collect: ("text_selection" | "clipboard" | "form_fields" | "page_context" | "file" | "audio" | "manual_input")[];
+  collect: ("text_selection" | "clipboard" | "form_fields" | "page_context" | "page_html" | "file" | "audio" | "manual_input")[];
   form_fields?: { name: string; selector: string }[];
   output_fields?: { name: string; selector: string }[];
   file_config?: FileConfig;

@@ -112,6 +112,16 @@ chrome.runtime.onMessage.addListener(
       return true;
     }
 
+    if (message.type === "GET_PAGE_HTML") {
+      sendResponse({
+        type: "PAGE_HTML_RESULT",
+        html: document.documentElement.outerHTML,
+        url: window.location.href,
+        title: document.title,
+      });
+      return true;
+    }
+
     if (message.type === "INSERT_TEXT") {
       smartInsertText(message.text).then((success) => {
         sendResponse({

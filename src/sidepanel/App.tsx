@@ -23,7 +23,7 @@ import type {
   InputDataPacket,
   FileConfig,
 } from "@/shared/types";
-import type { ExtensionMessage, SelectionResultMessage, FormFieldsResultMessage } from "@/shared/messages";
+import type { ExtensionMessage, SelectionResultMessage, FormFieldsResultMessage, PageHtmlResultMessage } from "@/shared/messages";
 import { sendToTab } from "@/shared/tab-messaging";
 import { HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
 import { needsFileInput, needsAudioInput, needsManualInput, formatFileSize, friendlyError, categoryIcon } from "./utils";
@@ -278,6 +278,14 @@ export function App() {
           }
           break;
         }
+        case "page_html": {
+          const page = await sendToTab<PageHtmlResultMessage>(tabId, { type: "GET_PAGE_HTML" });
+          packet.html = page?.html ?? "";
+          if (!packet.context) {
+            packet.context = { url: page?.url ?? "", title: page?.title ?? "" };
+          }
+          break;
+        }
         case "manual_input":
           packet.text = manualInputText;
           break;
@@ -380,15 +388,22 @@ export function App() {
         } as ExtensionMessage);
         break;
       case "download_file": {
-        const filename = (metadata?.filename as string) || "download";
-        const mimeType = (metadata?.mime_type as string) || "application/octet-stream";
+        const filename = (metadata?.filename as string) || "download.txt";
+        const mimeType = (metadata?.mime_type as string) || "text/plain";
         try {
-          const byteChars = atob(resultText);
-          const byteArray = new Uint8Array(byteChars.length);
-          for (let i = 0; i < byteChars.length; i++) {
-            byteArray[i] = byteChars.charCodeAt(i);
+          let blob: Blob;
+          if (mimeType.startsWith("text/") || mimeType === "application/json") {
+            // Text content — use directly
+            blob = new Blob([resultText], { type: mimeType });
+          } else {
+            // Binary content — decode from base64
+            const byteChars = atob(resultText);
+            const byteArray = new Uint8Array(byteChars.length);
+            for (let i = 0; i < byteChars.length; i++) {
+              byteArray[i] = byteChars.charCodeAt(i);
+            }
+            blob = new Blob([byteArray], { type: mimeType });
           }
-          const blob = new Blob([byteArray], { type: mimeType });
           const url = URL.createObjectURL(blob);
           await chrome.downloads.download({ url, filename, saveAs: true });
           URL.revokeObjectURL(url);

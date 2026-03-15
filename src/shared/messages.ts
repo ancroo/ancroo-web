@@ -74,6 +74,17 @@ export interface HideToastMessage {
   type: "HIDE_TOAST";
 }
 
+export interface GetPageHtmlMessage {
+  type: "GET_PAGE_HTML";
+}
+
+export interface PageHtmlResultMessage {
+  type: "PAGE_HTML_RESULT";
+  html: string;
+  url: string;
+  title: string;
+}
+
 export interface SetFormFieldsMessage {
   type: "SET_FORM_FIELDS";
   fields: Record<string, { selector: string; value: string }>;
@@ -89,6 +100,8 @@ export interface SetFormFieldsResultMessage {
 export type ExtensionMessage =
   | GetSelectionMessage
   | SelectionResultMessage
+  | GetPageHtmlMessage
+  | PageHtmlResultMessage
   | InsertTextMessage
   | InsertBeforeMessage
   | InsertAfterMessage
