@@ -163,7 +163,7 @@ export function App() {
         const target = workflowList.find(
           (w) => w.slug === session.pendingRecording
         );
-        if (target && target.recipe?.collect.includes("audio")) {
+        if (target && Array.isArray(target.recipe?.collect) && target.recipe.collect.includes("audio")) {
           setPendingWorkflow(target);
           setAutoStartRecording(true);
         }
@@ -175,7 +175,7 @@ export function App() {
         const target = workflowList.find(
           (w) => w.slug === session.pendingFileWorkflow
         );
-        if (target && target.recipe?.collect.includes("file")) {
+        if (target && Array.isArray(target.recipe?.collect) && target.recipe.collect.includes("file")) {
           setPendingWorkflow(target);
         }
       }
@@ -241,7 +241,8 @@ export function App() {
   ): Promise<InputDataPacket> {
     const packet: InputDataPacket = {};
 
-    for (const source of recipe.collect) {
+    const sources = Array.isArray(recipe.collect) ? recipe.collect : [];
+    for (const source of sources) {
       switch (source) {
         case "text_selection": {
           const sel = await sendToTab<SelectionResultMessage>(tabId, { type: "GET_SELECTION" });
@@ -391,28 +392,21 @@ export function App() {
         const filename = (metadata?.filename as string) || "download.txt";
         const mimeType = (metadata?.mime_type as string) || "text/plain";
         try {
-          let blob: Blob;
+          // Use a data URL instead of blob URL to avoid revocation timing issues
+          // with saveAs dialogs (blob gets revoked before user picks a location).
+          let dataUrl: string;
           if (mimeType.startsWith("text/") || mimeType === "application/json") {
-            // Text content — use directly
-            blob = new Blob([resultText], { type: mimeType });
+            dataUrl = `data:${mimeType};charset=utf-8,${encodeURIComponent(resultText)}`;
           } else {
-            // Binary content — decode from base64
-            const byteChars = atob(resultText);
-            const byteArray = new Uint8Array(byteChars.length);
-            for (let i = 0; i < byteChars.length; i++) {
-              byteArray[i] = byteChars.charCodeAt(i);
-            }
-            blob = new Blob([byteArray], { type: mimeType });
+            dataUrl = `data:${mimeType};base64,${resultText}`;
           }
-          const url = URL.createObjectURL(blob);
-          await chrome.downloads.download({ url, filename, saveAs: true });
-          URL.revokeObjectURL(url);
-          await sendToTab(tabId, {
+          await chrome.downloads.download({ url: dataUrl, filename, saveAs: true });
+          sendToTab(tabId, {
             type: "SHOW_TOAST",
             text: `Download: ${filename}`,
             variant: "success",
             duration: 3000,
-          } as ExtensionMessage);
+          } as ExtensionMessage).catch(() => {});
         } catch (err) {
           console.error("[ancroo] download_file failed:", err);
           setError("Download failed");
@@ -813,7 +807,7 @@ export function App() {
           .map(([category, categoryWorkflows]) => (
           <div key={category} class="mb-4">
             <h2 class="text-xs font-semibold text-gray-500 uppercase mb-2">
-              {categoryIcon(category)} {category}
+              {categoryIcon(categoryWorkflows[0])} {category}
             </h2>
             <div class="space-y-2">
           {categoryWorkflows.map((workflow) => {

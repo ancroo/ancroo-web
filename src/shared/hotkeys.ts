@@ -52,7 +52,7 @@ export function buildHotkeyBindings(
     if (!parsed) continue;
 
     const workflow = workflowMap.get(mapping.workflow_slug);
-    const collectSources = workflow?.recipe?.collect ?? [];
+    const collectSources = Array.isArray(workflow?.recipe?.collect) ? workflow.recipe.collect : [];
     const needsSidePanel = collectSources.some((s) => SIDE_PANEL_SOURCES.has(s));
 
     bindings.push({ parsed, workflow_slug: mapping.workflow_slug, needsSidePanel });

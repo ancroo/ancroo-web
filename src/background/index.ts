@@ -204,7 +204,7 @@ async function handleHotkeyExecution(
   const workflow = workflows.find((w) => w.slug === workflowSlug);
   if (!workflow) return;
 
-  const collectSources = workflow.recipe?.collect ?? [];
+  const collectSources = Array.isArray(workflow.recipe?.collect) ? workflow.recipe.collect : [];
   const needsAudio = collectSources.includes("audio");
   const needsFile = collectSources.includes("file");
   const needsManual = collectSources.includes("manual_input");

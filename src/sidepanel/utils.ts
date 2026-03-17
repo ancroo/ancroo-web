@@ -2,17 +2,17 @@ import type { Workflow } from "@/shared/types";
 
 /** Check if a workflow requires file input. */
 export function needsFileInput(workflow: Workflow): boolean {
-  return workflow.recipe?.collect.includes("file") ?? false;
+  return Array.isArray(workflow.recipe?.collect) && workflow.recipe.collect.includes("file");
 }
 
 /** Check if a workflow requires audio recording. */
 export function needsAudioInput(workflow: Workflow): boolean {
-  return workflow.recipe?.collect.includes("audio") ?? false;
+  return Array.isArray(workflow.recipe?.collect) && workflow.recipe.collect.includes("audio");
 }
 
 /** Check if a workflow requires manual text input. */
 export function needsManualInput(workflow: Workflow): boolean {
-  return workflow.recipe?.collect.includes("manual_input") ?? false;
+  return Array.isArray(workflow.recipe?.collect) && workflow.recipe.collect.includes("manual_input");
 }
 
 /** Format file size for display. */
@@ -48,15 +48,7 @@ export function friendlyError(msg: string): string {
   return msg;
 }
 
-const CATEGORY_ICONS: Record<string, string> = {
-  text: "\u270F\uFE0F",
-  voice: "\uD83C\uDF99\uFE0F",
-  automation: "\u26A1",
-  translation: "\uD83C\uDF10",
-  code: "\uD83D\uDCBB",
-};
-
-/** Return an emoji icon for a workflow category. */
-export function categoryIcon(category: string | undefined): string {
-  return CATEGORY_ICONS[category ?? ""] ?? "\uD83D\uDD27";
+/** Return an emoji icon for a workflow category (from backend, with fallback). */
+export function categoryIcon(workflow: { category_icon?: string | null }): string {
+  return workflow.category_icon ?? "\uD83D\uDD27";
 }

@@ -30,15 +30,13 @@ export interface Workflow {
   name: string;
   description: string | null;
   category: string | null;
+  category_icon: string | null;
   default_hotkey: string | null;
-  input_type: string;
-  output_type: string;
-  execution_type: string;
   version: string;
-  has_client_script: boolean;
-  provider_name: string | null;
-  sync_status: string;
-  workflow_type: string | null;
+  workflow_type: string;
+  llm_model_name: string | null;
+  stt_model_name: string | null;
+  tool_name: string | null;
   recipe: CollectionRecipe | null;
   output_action: string | null;
 }

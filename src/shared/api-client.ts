@@ -1,5 +1,6 @@
 import type {
   Workflow,
+  CollectionRecipe,
   ExecuteWorkflowResponse,
   InputDataPacket,
   User,
@@ -97,10 +98,33 @@ function extractDetail(body: string): string | null {
   return null;
 }
 
+/** Normalize a recipe so that `collect` is always a string array.
+ *  The backend may return collect as an array or as {sources: [...]}.
+ */
+function normalizeRecipe(recipe: unknown): Workflow["recipe"] {
+  if (!recipe || typeof recipe !== "object") return null;
+  const r = recipe as Record<string, unknown>;
+  let collect: CollectionRecipe["collect"] = [];
+  if (Array.isArray(r.collect)) {
+    collect = r.collect;
+  } else if (r.collect && typeof r.collect === "object" && Array.isArray((r.collect as Record<string, unknown>).sources)) {
+    collect = (r.collect as Record<string, unknown>).sources as CollectionRecipe["collect"];
+  }
+  return {
+    collect,
+    form_fields: Array.isArray(r.form_fields) ? r.form_fields : (r.collect as Record<string, unknown>)?.form_fields as typeof undefined,
+    output_fields: Array.isArray(r.output_fields) ? r.output_fields : (r.collect as Record<string, unknown>)?.output_fields as typeof undefined,
+    file_config: (r.file_config ?? (r.collect as Record<string, unknown>)?.file) as typeof undefined,
+  };
+}
+
 /** List all accessible workflows. */
 export async function listWorkflows(): Promise<Workflow[]> {
   const data = await apiFetch<{ workflows: Workflow[] }>("/workflows");
-  return data.workflows;
+  return data.workflows.map((w) => ({
+    ...w,
+    recipe: normalizeRecipe(w.recipe),
+  }));
 }
 
 /** Execute a workflow with the given input. */
