@@ -3,6 +3,53 @@ import { matchesEvent, HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
 import type { HotkeyBinding } from "@/shared/types";
 import { smartInsertText, smartInsertBefore, smartInsertAfter } from "./text-inserter";
 
+// --- Selection helpers ---
+// window.getSelection() does NOT return text selected inside <textarea> or
+// <input> elements.  selectionStart/selectionEnd survive focus loss, so we
+// track the last focused input and read it directly on demand.
+
+let lastFocusedInput: HTMLTextAreaElement | HTMLInputElement | null = null;
+
+document.addEventListener("focus", (e) => {
+  const el = e.target;
+  if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
+    lastFocusedInput = el;
+  }
+}, true); // capture phase — fires before blur
+
+function getInputSelection(): string {
+  const el = lastFocusedInput;
+  if (
+    el &&
+    document.contains(el) &&
+    typeof el.selectionStart === "number" &&
+    typeof el.selectionEnd === "number" &&
+    el.selectionStart !== el.selectionEnd
+  ) {
+    return el.value.substring(el.selectionStart, el.selectionEnd);
+  }
+  return "";
+}
+
+// --- Selection caching ---
+// When the user clicks the side panel, the page loses focus and the browser
+// clears the active selection.  We cache the last non-empty selection so
+// GET_SELECTION can still return it.
+
+let cachedSelectionText = "";
+let cachedSelectionHtml = "";
+
+document.addEventListener("selectionchange", () => {
+  const sel = window.getSelection();
+  const text = sel?.toString() ?? "";
+  if (text.length > 0 && sel && sel.rangeCount > 0) {
+    cachedSelectionText = text;
+    const container = document.createElement("div");
+    container.appendChild(sel.getRangeAt(0).cloneContents());
+    cachedSelectionHtml = container.innerHTML;
+  }
+});
+
 // --- Hotkey handling ---
 
 let hotkeyBindings: HotkeyBinding[] = [];
@@ -94,13 +141,24 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (message.type === "GET_SELECTION") {
-      const sel = window.getSelection();
-      const text = sel?.toString() ?? "";
+      // 1. Check last focused textarea/input (selectionStart/End survive blur)
+      let text = getInputSelection();
       let html = "";
-      if (sel && sel.rangeCount > 0) {
-        const container = document.createElement("div");
-        container.appendChild(sel.getRangeAt(0).cloneContents());
-        html = container.innerHTML;
+
+      // 2. Fall back to regular DOM selection
+      if (!text) {
+        const sel = window.getSelection();
+        text = sel?.toString() ?? "";
+        if (text.length > 0 && sel && sel.rangeCount > 0) {
+          const container = document.createElement("div");
+          container.appendChild(sel.getRangeAt(0).cloneContents());
+          html = container.innerHTML;
+        }
+      }
+      // 3. Fall back to cached selection (lost when side panel takes focus)
+      if (!text && cachedSelectionText) {
+        text = cachedSelectionText;
+        html = cachedSelectionHtml;
       }
       sendResponse({
         type: "SELECTION_RESULT",
