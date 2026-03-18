@@ -69,6 +69,16 @@ export function App() {
   const [resultWorkflowName, setResultWorkflowName] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
+  // Collapsed categories
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [recentCollapsed, setRecentCollapsed] = useState(false);
+  const toggleCategory = (cat: string) =>
+    setCollapsedCategories((prev) => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
+
   useEffect(() => {
     init();
   }, []);
@@ -546,6 +556,8 @@ export function App() {
         await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields, result.result.metadata);
       } else if (result.result && !result.result.success) {
         setError(result.result.error ?? `${workflow.name} failed`);
+      } else if (result.result?.success && !result.result.text) {
+        setError(`${workflow.name}: no output returned. Check your selection.`);
       }
     } catch (err) {
       console.error("Execution failed:", err);
@@ -806,10 +818,15 @@ export function App() {
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([category, categoryWorkflows]) => (
           <div key={category} class="mb-4">
-            <h2 class="text-xs font-semibold text-gray-500 uppercase mb-2">
+            <button
+              type="button"
+              onClick={() => toggleCategory(category)}
+              class="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase mb-2 hover:text-gray-700 cursor-pointer select-none w-full text-left"
+            >
+              <span class={`inline-block transition-transform duration-200 ${collapsedCategories.has(category) ? "" : "rotate-90"}`}>▶</span>
               {categoryIcon(categoryWorkflows[0])} {category}
-            </h2>
-            <div class="space-y-2">
+            </button>
+            {!collapsedCategories.has(category) && <div class="space-y-2">
           {categoryWorkflows.map((workflow) => {
             const isFile = needsFileInput(workflow);
             const isAudio = needsAudioInput(workflow);
@@ -972,7 +989,7 @@ export function App() {
               </div>
             );
           })}
-            </div>
+            </div>}
           </div>
         ))}
         {workflows.length === 0 && (
@@ -984,10 +1001,15 @@ export function App() {
         {/* History */}
         {history.length > 0 && (
           <>
-            <h2 class="text-xs font-semibold text-gray-500 uppercase mt-6 mb-2">
+            <button
+              type="button"
+              onClick={() => setRecentCollapsed((v) => !v)}
+              class="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase mt-6 mb-2 hover:text-gray-700 cursor-pointer select-none w-full text-left"
+            >
+              <span class={`inline-block transition-transform duration-200 ${recentCollapsed ? "" : "rotate-90"}`}>▶</span>
               Recent
-            </h2>
-            <div class="space-y-1">
+            </button>
+            {!recentCollapsed && <div class="space-y-1">
               {history.slice(0, 10).map((entry) => (
                 <HistoryItem
                   key={entry.id}
@@ -1003,7 +1025,7 @@ export function App() {
                   }}
                 />
               ))}
-            </div>
+            </div>}
           </>
         )}
       </div>
