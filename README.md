@@ -3,13 +3,13 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Preact](https://img.shields.io/badge/Preact-673AB8?logo=preact&logoColor=white)](https://preactjs.com/)
-[![Status: Alpha](https://img.shields.io/badge/Status-Alpha-orange.svg)]()
+[![Status: Beta](https://img.shields.io/badge/Status-Beta-yellow.svg)]()
 
 AI Workflow Runner for your Browser. Select text, trigger a workflow, get results — directly in the page.
 
 Manifest V3 browser extension built with Preact and TypeScript.
 
-> **Early stage** — Ancroo Web is under active development. The backend it connects to is intended for local/trusted networks only.
+> **Phase 0 (Beta)** — The extension works end-to-end, but the backend it connects to runs without encryption or authentication by default. Intended for local/trusted networks only. See the [Ancroo Roadmap](https://github.com/ancroo/ancroo/blob/main/ROADMAP.md) for the security path forward.
 
 ![Ancroo Admin Workflows and Sidepanel ](ancroo-sidepanel.png)
 
