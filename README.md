@@ -100,10 +100,10 @@ src/
 
 ## Backend
 
-This extension requires [Ancroo Stack](https://github.com/ancroo/ancroo-stack) with the `ancroo` module enabled:
+This extension requires [Ancroo Stack](https://github.com/ancroo/ancroo-stack) with the Ancroo Backend installed:
 
 ```bash
-./module.sh enable ancroo
+bash /path/to/ancroo-backend/install-stack.sh /path/to/ancroo-stack
 ```
 
 ## Contributing
