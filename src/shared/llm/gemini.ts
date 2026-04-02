@@ -9,7 +9,7 @@ export async function callGemini(
   provider: LLMProviderConfig,
   request: LLMRequest,
 ): Promise<LLMResponse> {
-  const url = `${BASE_URL}/models/${request.model}:generateContent?key=${provider.api_key}`;
+  const url = `${BASE_URL}/models/${request.model}:generateContent`;
 
   const contents: { role: string; parts: { text: string }[] }[] = [];
   if (request.system_prompt) {
@@ -39,7 +39,10 @@ export async function callGemini(
 
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-goog-api-key": provider.api_key,
+    },
     body: JSON.stringify(body),
     signal: request.signal,
   });
