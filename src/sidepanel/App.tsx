@@ -1,20 +1,15 @@
 import { useState, useEffect } from "preact/hooks";
-import {
-  listWorkflows,
-  executeWorkflow,
-  executeWorkflowWithFile,
-  getCurrentUser,
-} from "@/shared/api-client";
-import {
-  getSettings,
-  isSetupComplete,
-} from "@/shared/settings";
+import { executeWorkflowWithFile, getCurrentUser } from "@/shared/api-client";
+import { getSettings, isSetupComplete } from "@/shared/settings";
 import {
   login as authLogin,
   logout as authLogout,
   isLoggedIn,
   isAuthRequired,
 } from "@/shared/auth";
+import { getConnectionMode } from "@/shared/connection-mode";
+import { executeWorkflowUnified } from "@/shared/executor";
+import { listWorkflowsUnified } from "@/shared/workflow-provider";
 import type {
   Workflow,
   User,
@@ -33,6 +28,12 @@ import { FileUploadArea } from "./FileUploadArea";
 import { UploadProgressDisplay } from "./UploadProgressDisplay";
 import { SetupScreen } from "./SetupScreen";
 import { AboutPanel } from "./AboutPanel";
+import { WorkflowEditor } from "./WorkflowEditor";
+import { DirectModeSettings } from "./DirectModeSettings";
+import type { LocalWorkflow } from "@/shared/types";
+import type { ConnectionMode } from "@/shared/settings";
+import { saveLocalWorkflow, deleteLocalWorkflow } from "@/shared/local-workflows";
+import { saveSettings } from "@/shared/settings";
 
 export function App() {
   const [setupDone, setSetupDone] = useState<boolean | null>(null);
@@ -63,6 +64,12 @@ export function App() {
 
   // About panel state
   const [showAbout, setShowAbout] = useState(false);
+
+  // Direct mode state
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode>("backend");
+  const [editingWorkflow, setEditingWorkflow] = useState<LocalWorkflow | null | "new">(null);
+  const [showDirectSettings, setShowDirectSettings] = useState(false);
+  const [llmProviders, setLlmProviders] = useState<import("@/shared/settings").LLMProviderConfig[]>([]);
 
   // Result display state
   const [resultText, setResultText] = useState<string | null>(null);
@@ -135,22 +142,29 @@ export function App() {
       setError(null);
       setNeedsLogin(false);
 
-      // Check if the backend requires authentication
       const settings = await getSettings();
-      const authRequired = await isAuthRequired(settings.backend_url);
-      setAuthEnabled(authRequired);
+      const mode = await getConnectionMode();
+      setConnectionMode(mode);
 
-      if (authRequired) {
-        const loggedIn = await isLoggedIn();
-        if (!loggedIn) {
-          setNeedsLogin(true);
-          return;
+      // In backend mode, check auth requirements
+      if (mode === "backend") {
+        const authRequired = await isAuthRequired(settings.backend_url);
+        setAuthEnabled(authRequired);
+
+        if (authRequired) {
+          const loggedIn = await isLoggedIn();
+          if (!loggedIn) {
+            setNeedsLogin(true);
+            return;
+          }
         }
+      } else {
+        setAuthEnabled(false);
       }
 
       const [userInfo, workflowList, stored, session] = await Promise.all([
-        getCurrentUser(),
-        listWorkflows(),
+        mode === "backend" ? getCurrentUser() : Promise.resolve(null),
+        listWorkflowsUnified(),
         chrome.storage.local.get("history"),
         chrome.storage.session.get([
           "pendingRecording",
@@ -163,6 +177,7 @@ export function App() {
       setWorkflows(workflowList);
       setHistory((stored.history as HistoryEntry[] | undefined) ?? []);
       setMicDeviceId(settings.microphone_device_id);
+      if (mode === "direct") setLlmProviders(settings.llm_providers);
 
       // Cache workflows for background hotkey execution and refresh bindings
       await chrome.storage.session.set({ cachedWorkflows: workflowList });
@@ -522,7 +537,7 @@ export function App() {
         };
       }
 
-      const result = await executeWorkflow(workflow.slug, inputData);
+      const result = await executeWorkflowUnified(workflow, inputData);
 
       const entry: HistoryEntry = {
         id: result.execution_id,
@@ -724,6 +739,43 @@ export function App() {
     return <AboutPanel onClose={() => setShowAbout(false)} />;
   }
 
+  // Direct Mode: Workflow Editor
+  if (editingWorkflow !== null && connectionMode === "direct") {
+    const wf = editingWorkflow === "new" ? null : editingWorkflow;
+    return (
+      <WorkflowEditor
+        workflow={wf}
+        providers={llmProviders}
+        onSave={async (saved) => {
+          await saveLocalWorkflow(saved);
+          setEditingWorkflow(null);
+          await loadData();
+        }}
+        onDelete={wf ? async (slug) => {
+          await deleteLocalWorkflow(slug);
+          setEditingWorkflow(null);
+          await loadData();
+        } : undefined}
+        onCancel={() => setEditingWorkflow(null)}
+      />
+    );
+  }
+
+  // Direct Mode: Settings
+  if (showDirectSettings && connectionMode === "direct") {
+    return (
+      <DirectModeSettings
+        onClose={() => { setShowDirectSettings(false); loadData(); }}
+        onSwitchToBackend={async () => {
+          const current = await getSettings();
+          await saveSettings({ ...current, connection_mode: "backend" });
+          setShowDirectSettings(false);
+          setSetupDone(false);
+        }}
+      />
+    );
+  }
+
   // Result display — shown after successful file workflow execution
   if (resultText !== null) {
     return (
@@ -775,11 +827,13 @@ export function App() {
               <line x1="12" y1="8" x2="12.01" y2="8" />
             </svg>
           </button>
-          <span class="text-xs text-gray-500">
-            {user?.display_name && !/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(user.display_name)
-              ? user.display_name
-              : user?.email?.split("@")[0] ?? "User"}
-          </span>
+          {user && (
+            <span class="text-xs text-gray-500">
+              {user.display_name && !/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(user.display_name)
+                ? user.display_name
+                : user.email?.split("@")[0] ?? "User"}
+            </span>
+          )}
           {authEnabled && (
             <button
               onClick={handleLogout}
@@ -798,8 +852,16 @@ export function App() {
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
           </button>
+          {connectionMode === "direct" && (
+            <button
+              onClick={() => setEditingWorkflow("new")}
+              class="text-xs text-blue-500 hover:text-blue-700"
+            >
+              + New
+            </button>
+          )}
           <button
-            onClick={() => setSetupDone(false)}
+            onClick={() => connectionMode === "direct" ? setShowDirectSettings(true) : setSetupDone(false)}
             class="text-xs text-gray-400 hover:text-gray-600"
           >
             Settings
@@ -862,6 +924,17 @@ export function App() {
                     )}
                     {isManual && (
                       <span class="text-xs text-teal-500">Manual input</span>
+                    )}
+                    {connectionMode === "direct" && (
+                      <span
+                        class="text-xs text-gray-400 hover:text-gray-600 ml-auto"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingWorkflow(workflow as LocalWorkflow);
+                        }}
+                      >
+                        Edit
+                      </span>
                     )}
                   </div>
                   {isExecuting && !isFile && !isAudio && (

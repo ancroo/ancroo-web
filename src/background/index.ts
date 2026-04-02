@@ -1,6 +1,7 @@
-import { executeWorkflow, listWorkflows, fetchHotkeySettings } from "@/shared/api-client";
 import { sendToTab } from "@/shared/tab-messaging";
 import { buildHotkeyBindings, HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
+import { executeWorkflowUnified } from "@/shared/executor";
+import { listWorkflowsUnified, fetchHotkeySettingsUnified } from "@/shared/workflow-provider";
 import type { ExtensionMessage, SelectionResultMessage } from "@/shared/messages";
 import type { Workflow, HistoryEntry, HotkeyBinding } from "@/shared/types";
 
@@ -142,14 +143,14 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
  */
 async function refreshHotkeyBindings(retries = 0): Promise<void> {
   try {
-    const mappings = await fetchHotkeySettings();
+    const mappings = await fetchHotkeySettingsUnified();
 
-    // Use cached workflows if available, otherwise fetch from server.
+    // Use cached workflows if available, otherwise fetch.
     const session = await chrome.storage.session.get("cachedWorkflows");
     let workflows: Workflow[] =
       (session.cachedWorkflows as Workflow[] | undefined) ?? [];
     if (workflows.length === 0) {
-      workflows = await listWorkflows();
+      workflows = await listWorkflowsUnified();
       await chrome.storage.session.set({ cachedWorkflows: workflows });
     }
 
@@ -194,7 +195,7 @@ async function handleHotkeyExecution(
 
   if (workflows.length === 0) {
     try {
-      workflows = await listWorkflows();
+      workflows = await listWorkflowsUnified();
       await chrome.storage.session.set({ cachedWorkflows: workflows });
     } catch {
       return;
@@ -254,7 +255,7 @@ async function handleHotkeyExecution(
   } as ExtensionMessage);
 
   try {
-    const result = await executeWorkflow(workflowSlug, {
+    const result = await executeWorkflowUnified(workflow, {
       text: response.text,
       html: response.html,
       context: { url: response.url, title: response.title },

@@ -41,6 +41,22 @@ export interface Workflow {
   output_action: string | null;
 }
 
+/** Local workflow for Direct Mode. Extends Workflow so existing UI works unchanged. */
+export interface LocalWorkflow extends Workflow {
+  /** Prompt template with {text}, {clipboard}, {html}, {url}, {title}, {fields} placeholders. */
+  prompt_template: string;
+  /** ID of the LLMProviderConfig to use. */
+  provider_id: string;
+  /** Model identifier sent to the provider (e.g. "gpt-4o", "claude-sonnet-4-20250514"). */
+  model: string;
+  /** Optional system prompt. */
+  system_prompt?: string;
+  /** Max tokens for the response. */
+  max_tokens?: number;
+  /** Temperature (0-2). */
+  temperature?: number;
+}
+
 /** Result from executing a workflow. */
 export interface ExecutionResult {
   text: string | null;
