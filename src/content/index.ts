@@ -132,6 +132,13 @@ function clearRecordingState(): void {
   delete (globalThis as Record<string, unknown>)[ANCROO_KEY];
 }
 
+// Validate selectors to prevent targeting arbitrary DOM elements.
+// Only allow selectors that target form-related elements.
+const ALLOWED_SELECTOR_RE = /^(input|textarea|select|label|form|fieldset|option|optgroup|button|datalist|output)\b/i;
+function isAllowedSelector(selector: string): boolean {
+  return ALLOWED_SELECTOR_RE.test(selector.trimStart());
+}
+
 // Listen for messages from the background script
 chrome.runtime.onMessage.addListener(
   (message: ExtensionMessage, sender, sendResponse) => {
@@ -208,6 +215,7 @@ chrome.runtime.onMessage.addListener(
       const result: Record<string, string> = {};
       for (const field of message.fields) {
         try {
+          if (!isAllowedSelector(field.selector)) continue;
           const el = document.querySelector(field.selector);
           if (el) {
             if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
@@ -229,6 +237,10 @@ chrome.runtime.onMessage.addListener(
       let setCount = 0;
       for (const [key, { selector, value }] of Object.entries(message.fields)) {
         try {
+          if (!isAllowedSelector(selector)) {
+            errors.push(`Blocked selector for "${key}": ${selector}`);
+            continue;
+          }
           const el = document.querySelector(selector);
           if (!el) {
             errors.push(`No element found for "${key}" (${selector})`);
