@@ -11,6 +11,14 @@ const PROVIDER_TYPES: { value: LLMProviderType; label: string }[] = [
   { value: "openai-compatible", label: "OpenAI-Compatible" },
 ];
 
+const DEFAULT_BASE_URLS: Partial<Record<LLMProviderType, string>> = {
+  openai: "https://api.openai.com",
+  anthropic: "https://api.anthropic.com",
+  gemini: "https://generativelanguage.googleapis.com",
+  openrouter: "https://openrouter.ai/api",
+  ollama: "http://localhost:11434",
+};
+
 const DEFAULT_MODELS: Record<LLMProviderType, string> = {
   openai: "gpt-4o",
   anthropic: "claude-sonnet-4-20250514",
@@ -156,7 +164,7 @@ export function ProviderSettings({ providers, onSave }: Props) {
           </div>
         )}
 
-        {(editing.type === "openai-compatible" || editing.type === "ollama") && (
+        {(editing.type === "openai-compatible" || editing.type === "ollama") ? (
           <div>
             <label class="text-xs font-medium text-gray-700">Base URL</label>
             <input
@@ -170,7 +178,14 @@ export function ProviderSettings({ providers, onSave }: Props) {
               <p class="text-xs text-gray-400 mt-0.5">Leave empty for localhost:11434</p>
             )}
           </div>
-        )}
+        ) : DEFAULT_BASE_URLS[editing.type] ? (
+          <div>
+            <label class="text-xs font-medium text-gray-700">API Endpoint</label>
+            <div class="w-full border rounded px-2 py-1.5 text-sm text-gray-400 bg-gray-50 mt-0.5">
+              {DEFAULT_BASE_URLS[editing.type]}
+            </div>
+          </div>
+        ) : null}
 
         {testResult && (
           <div class={`text-xs px-2 py-1.5 rounded ${testResult === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
@@ -218,7 +233,7 @@ export function ProviderSettings({ providers, onSave }: Props) {
           <div>
             <div class="text-sm font-medium">{p.name}</div>
             <div class="text-xs text-gray-400">
-              {p.type}{p.base_url ? ` — ${p.base_url}` : ""} — ****{p.api_key.slice(-4)}
+              {p.type} — {p.base_url || DEFAULT_BASE_URLS[p.type] || "custom"} — ****{p.api_key.slice(-4)}
             </div>
           </div>
           <div class="flex gap-1">

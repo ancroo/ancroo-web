@@ -223,7 +223,7 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
               value={temperature}
               onInput={(e) => setTemperature((e.target as HTMLInputElement).value)}
               class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
-              placeholder="Default"
+              placeholder="Provider default (0.8 – 1.0)"
             />
           </div>
         </div>
