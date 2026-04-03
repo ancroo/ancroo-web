@@ -60,7 +60,7 @@ jobs:
         run: zip -9 -r ancroo-web-extension.zip ancroo-web-extension
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: ancroo-web-extension.zip
           generate_release_notes: true
