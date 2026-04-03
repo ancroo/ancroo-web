@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Ancroo",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "description": "AI Workflow Runner for your Browser",
   "permissions": [
     "activeTab",
@@ -27,7 +27,7 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "src/background/index.ts",
+    "service_worker": "src/background/service-worker.ts",
     "type": "module"
   },
   "content_scripts": [
