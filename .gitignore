@@ -19,5 +19,8 @@ dist/
 coverage/
 testpages/screenshots/
 
+# Promo image sources
+store/*.html
+
 # Claude Code
 .claude/
