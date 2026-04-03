@@ -1,11 +1,6 @@
 /** Unified workflow executor — dispatches to backend or direct LLM based on connection mode. */
 
-import type {
-  InputDataPacket,
-  ExecuteWorkflowResponse,
-  LocalWorkflow,
-  Workflow,
-} from "./types";
+import type { InputDataPacket, ExecuteWorkflowResponse, LocalWorkflow, Workflow } from "./types";
 import { getConnectionMode } from "./connection-mode";
 import { getSettings } from "./settings";
 import { executeWorkflow as backendExecute } from "./api-client";
@@ -43,19 +38,23 @@ async function executeDirectLLM(
   if (!local.prompt_template) {
     const found = await getLocalWorkflow(workflow.slug);
     if (!found) {
-      return errorResult(executionId, start,
-        `Workflow "${workflow.slug}" not found in local storage.`);
+      return errorResult(
+        executionId,
+        start,
+        `Workflow "${workflow.slug}" not found in local storage.`,
+      );
     }
     local = found;
   }
 
   const settings = await getSettings();
-  const provider = settings.llm_providers.find(
-    (p) => p.id === local.provider_id,
-  );
+  const provider = settings.llm_providers.find((p) => p.id === local.provider_id);
   if (!provider) {
-    return errorResult(executionId, start,
-      `LLM provider "${local.provider_id}" not configured. Check your settings.`);
+    return errorResult(
+      executionId,
+      start,
+      `LLM provider "${local.provider_id}" not configured. Check your settings.`,
+    );
   }
 
   try {
@@ -83,7 +82,9 @@ async function executeDirectLLM(
       status: "success",
       result: {
         text: response.text,
-        action: (local.output_action ?? "side_panel_only") as NonNullable<ExecuteWorkflowResponse["result"]>["action"],
+        action: (local.output_action ?? "side_panel_only") as NonNullable<
+          ExecuteWorkflowResponse["result"]
+        >["action"],
         success: true,
         error: null,
         metadata: {
@@ -101,11 +102,7 @@ async function executeDirectLLM(
 }
 
 /** Build a standardized error response. */
-function errorResult(
-  executionId: string,
-  start: number,
-  error: string,
-): ExecuteWorkflowResponse {
+function errorResult(executionId: string, start: number, error: string): ExecuteWorkflowResponse {
   return {
     execution_id: executionId,
     status: "error",
@@ -132,7 +129,11 @@ function friendlyDirectError(msg: string): string {
     const modelName = modelMatch?.[1] ?? "unknown";
     return `Model "${modelName}" not found. Check that it is available with your provider.`;
   }
-  if (lower.includes("401") || lower.includes("unauthorized") || lower.includes("invalid api key")) {
+  if (
+    lower.includes("401") ||
+    lower.includes("unauthorized") ||
+    lower.includes("invalid api key")
+  ) {
     return "Invalid API key. Check your provider settings.";
   }
   if (lower.includes("429") || lower.includes("rate limit")) {

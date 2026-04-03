@@ -110,9 +110,7 @@ export function SetupScreen({ onComplete }: { onComplete: () => void }) {
     return (
       <div class="flex flex-col h-screen p-4">
         <h1 class="text-lg font-bold mb-1">Ancroo Setup</h1>
-        <p class="text-xs text-gray-500 mb-6">
-          How would you like to use Ancroo?
-        </p>
+        <p class="text-xs text-gray-500 mb-6">How would you like to use Ancroo?</p>
 
         <div class="space-y-3">
           <button
@@ -121,8 +119,8 @@ export function SetupScreen({ onComplete }: { onComplete: () => void }) {
           >
             <div class="font-medium text-sm">Direct Mode</div>
             <p class="text-xs text-gray-500 mt-1">
-              Connect directly to OpenAI, Anthropic, Gemini, Ollama, OpenRouter,
-              or any OpenAI-compatible API. No server needed.
+              Connect directly to OpenAI, Anthropic, Gemini, Ollama, OpenRouter, or any
+              OpenAI-compatible API. No server needed.
             </p>
           </button>
 
@@ -132,8 +130,8 @@ export function SetupScreen({ onComplete }: { onComplete: () => void }) {
           >
             <div class="font-medium text-sm">Backend Mode</div>
             <p class="text-xs text-gray-500 mt-1">
-              Connect to a self-hosted Ancroo server. Includes STT, tools,
-              n8n integration, and multi-user support.
+              Connect to a self-hosted Ancroo server. Includes STT, tools, n8n integration, and
+              multi-user support.
             </p>
           </button>
         </div>
@@ -146,9 +144,7 @@ export function SetupScreen({ onComplete }: { onComplete: () => void }) {
     return (
       <div class="flex flex-col h-screen p-4">
         <h1 class="text-lg font-bold mb-1">Backend Setup</h1>
-        <p class="text-xs text-gray-500 mb-4">
-          Configure your server and microphone.
-        </p>
+        <p class="text-xs text-gray-500 mb-4">Configure your server and microphone.</p>
 
         <label class="text-xs font-medium text-gray-700 mb-1">Backend URL</label>
         <input
@@ -161,15 +157,10 @@ export function SetupScreen({ onComplete }: { onComplete: () => void }) {
 
         <label class="text-xs font-medium text-gray-700 mb-1">Microphone</label>
         <div class="mb-3">
-          <MicrophoneSelector
-            deviceId={micDeviceId}
-            onChange={setMicDeviceId}
-          />
+          <MicrophoneSelector deviceId={micDeviceId} onChange={setMicDeviceId} />
         </div>
 
-        {error && (
-          <div class="text-xs text-red-600 mb-3">{error}</div>
-        )}
+        {error && <div class="text-xs text-red-600 mb-3">{error}</div>}
 
         <button
           onClick={handleBackendSave}
@@ -180,7 +171,10 @@ export function SetupScreen({ onComplete }: { onComplete: () => void }) {
         </button>
 
         <button
-          onClick={() => { setStep("mode"); setError(null); }}
+          onClick={() => {
+            setStep("mode");
+            setError(null);
+          }}
           class="mt-3 text-xs text-gray-400 hover:text-gray-600 text-center"
         >
           Back
@@ -194,20 +188,15 @@ export function SetupScreen({ onComplete }: { onComplete: () => void }) {
     <div class="flex flex-col h-screen p-4">
       <h1 class="text-lg font-bold mb-1">Direct Mode Setup</h1>
       <p class="text-xs text-gray-500 mb-4">
-        Add at least one LLM provider to get started.
-        Starter workflows will be created automatically.
+        Add at least one LLM provider to get started. Starter workflows will be created
+        automatically.
       </p>
 
       <div class="flex-1 overflow-y-auto">
-        <ProviderSettings
-          providers={providers}
-          onSave={handleDirectSaveProviders}
-        />
+        <ProviderSettings providers={providers} onSave={handleDirectSaveProviders} />
       </div>
 
-      {error && (
-        <div class="text-xs text-red-600 mt-3">{error}</div>
-      )}
+      {error && <div class="text-xs text-red-600 mt-3">{error}</div>}
 
       <button
         onClick={handleDirectComplete}
@@ -218,7 +207,10 @@ export function SetupScreen({ onComplete }: { onComplete: () => void }) {
       </button>
 
       <button
-        onClick={() => { setStep("mode"); setError(null); }}
+        onClick={() => {
+          setStep("mode");
+          setError(null);
+        }}
         class="mt-2 text-xs text-gray-400 hover:text-gray-600 text-center"
       >
         Back

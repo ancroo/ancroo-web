@@ -72,9 +72,8 @@ export function ProviderSettings({ providers, onSave }: Props) {
       }
     }
 
-    const saved = editing.type === "ollama" && !editing.api_key
-      ? { ...editing, api_key: "ollama" }
-      : editing;
+    const saved =
+      editing.type === "ollama" && !editing.api_key ? { ...editing, api_key: "ollama" } : editing;
     const updated = providers.filter((p) => p.id !== saved.id);
     updated.push(saved);
     onSave(updated);
@@ -99,9 +98,8 @@ export function ProviderSettings({ providers, onSave }: Props) {
         }
       }
       const { callLLM } = await import("@/shared/llm");
-      const testProvider = editing.type === "ollama" && !editing.api_key
-        ? { ...editing, api_key: "ollama" }
-        : editing;
+      const testProvider =
+        editing.type === "ollama" && !editing.api_key ? { ...editing, api_key: "ollama" } : editing;
       await callLLM(testProvider, {
         model: DEFAULT_MODELS[editing.type] || "gpt-4o",
         user_prompt: "Reply with exactly: OK",
@@ -135,7 +133,9 @@ export function ProviderSettings({ providers, onSave }: Props) {
             class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
           >
             {PROVIDER_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
             ))}
           </select>
         </div>
@@ -157,22 +157,28 @@ export function ProviderSettings({ providers, onSave }: Props) {
             <input
               type="password"
               value={editing.api_key}
-              onInput={(e) => setEditing({ ...editing, api_key: (e.target as HTMLInputElement).value })}
+              onInput={(e) =>
+                setEditing({ ...editing, api_key: (e.target as HTMLInputElement).value })
+              }
               class="w-full border rounded px-2 py-1.5 text-sm font-mono mt-0.5"
               placeholder="sk-..."
             />
           </div>
         )}
 
-        {(editing.type === "openai-compatible" || editing.type === "ollama") ? (
+        {editing.type === "openai-compatible" || editing.type === "ollama" ? (
           <div>
             <label class="text-xs font-medium text-gray-700">Base URL</label>
             <input
               type="url"
               value={editing.base_url ?? ""}
-              onInput={(e) => setEditing({ ...editing, base_url: (e.target as HTMLInputElement).value })}
+              onInput={(e) =>
+                setEditing({ ...editing, base_url: (e.target as HTMLInputElement).value })
+              }
               class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
-              placeholder={editing.type === "ollama" ? "http://localhost:11434" : "https://api.example.com"}
+              placeholder={
+                editing.type === "ollama" ? "http://localhost:11434" : "https://api.example.com"
+              }
             />
             {editing.type === "ollama" && (
               <p class="text-xs text-gray-400 mt-0.5">Leave empty for localhost:11434</p>
@@ -188,7 +194,9 @@ export function ProviderSettings({ providers, onSave }: Props) {
         ) : null}
 
         {testResult && (
-          <div class={`text-xs px-2 py-1.5 rounded ${testResult === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}>
+          <div
+            class={`text-xs px-2 py-1.5 rounded ${testResult === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
+          >
             {testResult === "success" ? "Connection successful!" : testResult}
           </div>
         )}
@@ -210,7 +218,10 @@ export function ProviderSettings({ providers, onSave }: Props) {
           </button>
         </div>
         <button
-          onClick={() => { setEditing(null); setTestResult(null); }}
+          onClick={() => {
+            setEditing(null);
+            setTestResult(null);
+          }}
           class="w-full text-xs text-gray-400 hover:text-gray-600"
         >
           Cancel
@@ -224,16 +235,15 @@ export function ProviderSettings({ providers, onSave }: Props) {
     <div class="space-y-3">
       <h3 class="text-xs font-semibold text-gray-500 uppercase">LLM Providers</h3>
 
-      {providers.length === 0 && (
-        <p class="text-xs text-gray-400">No providers configured yet.</p>
-      )}
+      {providers.length === 0 && <p class="text-xs text-gray-400">No providers configured yet.</p>}
 
       {providers.map((p) => (
         <div key={p.id} class="flex items-center justify-between p-2 bg-white rounded-lg border">
           <div>
             <div class="text-sm font-medium">{p.name}</div>
             <div class="text-xs text-gray-400">
-              {p.type} — {p.base_url || DEFAULT_BASE_URLS[p.type] || "custom"} — ****{p.api_key.slice(-4)}
+              {p.type} — {p.base_url || DEFAULT_BASE_URLS[p.type] || "custom"} — ****
+              {p.api_key.slice(-4)}
             </div>
           </div>
           <div class="flex gap-1">

@@ -146,11 +146,15 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
             <label class="text-xs font-medium text-gray-700">Category</label>
             <select
               value={category}
-              onChange={(e) => setCategory((e.target as HTMLSelectElement).value as WorkflowCategory)}
+              onChange={(e) =>
+                setCategory((e.target as HTMLSelectElement).value as WorkflowCategory)
+              }
               class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
             >
               {WORKFLOW_CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
+                <option key={c.value} value={c.value}>
+                  {c.icon} {c.label}
+                </option>
               ))}
             </select>
           </div>
@@ -186,7 +190,9 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
               class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
             >
               {providers.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
               ))}
             </select>
           </div>
@@ -203,7 +209,9 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
                     <option value={model}>{model}</option>
                   )}
                   {availableModels.map((m) => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
                   ))}
                 </select>
               ) : (
@@ -222,7 +230,17 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
                 class="border rounded px-2 py-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition disabled:opacity-50"
                 title="Refresh models"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class={loadingModels ? "animate-spin" : ""}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class={loadingModels ? "animate-spin" : ""}
+                >
                   <polyline points="23 4 23 10 17 10" />
                   <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
@@ -250,11 +268,17 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
             <label class="text-xs font-medium text-gray-700">Input</label>
             <select
               value={inputSource}
-              onChange={(e) => setInputSource((e.target as HTMLSelectElement).value as CollectionRecipe["collect"][number])}
+              onChange={(e) =>
+                setInputSource(
+                  (e.target as HTMLSelectElement).value as CollectionRecipe["collect"][number],
+                )
+              }
               class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
             >
               {INPUT_SOURCES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
               ))}
             </select>
           </div>
@@ -266,7 +290,9 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
               class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
             >
               {OUTPUT_ACTIONS.map((a) => (
-                <option key={a.value} value={a.value}>{a.label}</option>
+                <option key={a.value} value={a.value}>
+                  {a.label}
+                </option>
               ))}
             </select>
           </div>

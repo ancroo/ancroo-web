@@ -130,7 +130,7 @@ export function RecordingArea({
         msg.toLowerCase().includes("permission")
       ) {
         setMicError(
-          "Microphone access denied. Check your browser's site settings to allow microphone access for this extension."
+          "Microphone access denied. Check your browser's site settings to allow microphone access for this extension.",
         );
       } else if (msg.includes("NotFound") || msg.includes("no device")) {
         setMicError("No microphone found. Please connect a microphone.");
@@ -175,9 +175,7 @@ export function RecordingArea({
           <span class="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
           <span class="text-sm font-medium text-red-600">Recording</span>
         </div>
-        <div class="text-2xl font-mono text-gray-700 mb-3">
-          {formatTime(elapsed)}
-        </div>
+        <div class="text-2xl font-mono text-gray-700 mb-3">{formatTime(elapsed)}</div>
         <button
           onClick={handleStop}
           class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition text-sm"
@@ -196,9 +194,7 @@ export function RecordingArea({
       >
         Start Recording
       </button>
-      <div class="text-xs text-gray-400 mt-2">
-        Or use Alt+Shift+R to toggle
-      </div>
+      <div class="text-xs text-gray-400 mt-2">Or use Alt+Shift+R to toggle</div>
     </div>
   );
 }

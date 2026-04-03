@@ -53,16 +53,11 @@ export function FileUploadArea({
             <span class="font-medium">{file.name}</span>
             <span class="text-gray-400 ml-2">{formatFileSize(file.size)}</span>
           </div>
-          <button
-            onClick={onClear}
-            class="text-xs text-gray-400 hover:text-red-500 ml-2"
-          >
+          <button onClick={onClear} class="text-xs text-gray-400 hover:text-red-500 ml-2">
             Remove
           </button>
         </div>
-        {error && (
-          <div class="text-xs text-red-600 mt-1">{error}</div>
-        )}
+        {error && <div class="text-xs text-red-600 mt-1">{error}</div>}
       </div>
     );
   }
@@ -75,15 +70,11 @@ export function FileUploadArea({
         onDragLeave={handleDragLeave}
         onClick={() => inputRef.current?.click()}
         class={`text-center py-4 cursor-pointer rounded transition ${
-          dragOver
-            ? "bg-blue-50 border-blue-300"
-            : "hover:bg-gray-100"
+          dragOver ? "bg-blue-50 border-blue-300" : "hover:bg-gray-100"
         }`}
       >
         <div class="text-sm text-gray-500">{config.label}</div>
-        <div class="text-xs text-gray-400 mt-1">
-          Drop file here or click to select
-        </div>
+        <div class="text-xs text-gray-400 mt-1">Drop file here or click to select</div>
         <div class="text-xs text-gray-300 mt-1">
           {config.accept} &middot; max {config.max_size_mb} MB
         </div>
@@ -95,9 +86,7 @@ export function FileUploadArea({
         onChange={handleInputChange}
         class="hidden"
       />
-      {error && (
-        <div class="text-xs text-red-600 mt-1">{error}</div>
-      )}
+      {error && <div class="text-xs text-red-600 mt-1">{error}</div>}
     </div>
   );
 }

@@ -8,9 +8,7 @@ export interface ModelInfo {
 }
 
 /** Fetch the list of available models for a provider. */
-export async function fetchModels(
-  provider: LLMProviderConfig,
-): Promise<ModelInfo[]> {
+export async function fetchModels(provider: LLMProviderConfig): Promise<ModelInfo[]> {
   switch (provider.type) {
     case "ollama":
       return fetchOllamaModels(provider);
@@ -28,9 +26,7 @@ export async function fetchModels(
   }
 }
 
-async function fetchOllamaModels(
-  provider: LLMProviderConfig,
-): Promise<ModelInfo[]> {
+async function fetchOllamaModels(provider: LLMProviderConfig): Promise<ModelInfo[]> {
   const baseUrl = (provider.base_url || "http://localhost:11434").replace(/\/+$/, "");
   const res = await fetch(`${baseUrl}/api/tags`, {
     headers: { Origin: baseUrl },
@@ -43,9 +39,7 @@ async function fetchOllamaModels(
   }));
 }
 
-async function fetchOpenAIModels(
-  provider: LLMProviderConfig,
-): Promise<ModelInfo[]> {
+async function fetchOpenAIModels(provider: LLMProviderConfig): Promise<ModelInfo[]> {
   const baseUrl = (provider.base_url || "https://api.openai.com").replace(/\/+$/, "");
   const headers: Record<string, string> = {};
   if (provider.api_key && provider.api_key !== "ollama") {
@@ -59,9 +53,7 @@ async function fetchOpenAIModels(
     .sort((a: ModelInfo, b: ModelInfo) => a.name.localeCompare(b.name));
 }
 
-async function fetchGeminiModels(
-  provider: LLMProviderConfig,
-): Promise<ModelInfo[]> {
+async function fetchGeminiModels(provider: LLMProviderConfig): Promise<ModelInfo[]> {
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models?key=${provider.api_key}`,
   );
@@ -75,9 +67,7 @@ async function fetchGeminiModels(
     }));
 }
 
-async function fetchAnthropicModels(
-  provider: LLMProviderConfig,
-): Promise<ModelInfo[]> {
+async function fetchAnthropicModels(provider: LLMProviderConfig): Promise<ModelInfo[]> {
   const res = await fetch("https://api.anthropic.com/v1/models", {
     headers: {
       "x-api-key": provider.api_key,

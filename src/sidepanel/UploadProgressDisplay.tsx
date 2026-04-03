@@ -21,9 +21,7 @@ export function UploadProgressDisplay({
               style={{ width: `${progress ?? 0}%` }}
             />
           </div>
-          <div class="text-xs text-gray-500">
-            Uploading... {progress ?? 0}%
-          </div>
+          <div class="text-xs text-gray-500">Uploading... {progress ?? 0}%</div>
         </>
       )}
     </div>

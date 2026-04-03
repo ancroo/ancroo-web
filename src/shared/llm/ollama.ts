@@ -38,7 +38,11 @@ async function ensureOriginRule(baseUrl: string): Promise<void> {
       addRules: [rule],
     });
   } catch (err) {
-    console.warn("Failed to set Ollama origin rule:", err);
+    // Only warn for unexpected errors — declarativeNetRequest is unavailable
+    // in content scripts and during early extension init, which is expected.
+    if (err instanceof Error && !err.message.includes("Cannot access")) {
+      console.warn("Failed to set Ollama origin rule:", err);
+    }
   }
 }
 

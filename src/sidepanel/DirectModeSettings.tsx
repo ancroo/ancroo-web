@@ -35,8 +35,8 @@ export function DirectModeSettings({ onClose, onSwitchToBackend }: Props) {
 
         <div class="pt-2 border-t">
           <p class="text-xs text-gray-400 mb-2">
-            Switch to Backend Mode to use a self-hosted Ancroo server with
-            STT, tools, and multi-user support.
+            Switch to Backend Mode to use a self-hosted Ancroo server with STT, tools, and
+            multi-user support.
           </p>
           <button
             onClick={onSwitchToBackend}

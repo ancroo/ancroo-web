@@ -30,12 +30,9 @@ export async function callGemini(
   const body: Record<string, unknown> = { contents };
 
   const generationConfig: Record<string, unknown> = {};
-  if (request.max_tokens != null)
-    generationConfig.maxOutputTokens = request.max_tokens;
-  if (request.temperature != null)
-    generationConfig.temperature = request.temperature;
-  if (Object.keys(generationConfig).length > 0)
-    body.generationConfig = generationConfig;
+  if (request.max_tokens != null) generationConfig.maxOutputTokens = request.max_tokens;
+  if (request.temperature != null) generationConfig.temperature = request.temperature;
+  if (Object.keys(generationConfig).length > 0) body.generationConfig = generationConfig;
 
   const res = await fetch(url, {
     method: "POST",
@@ -54,9 +51,8 @@ export async function callGemini(
 
   const data = await res.json();
   const text =
-    data.candidates?.[0]?.content?.parts
-      ?.map((p: { text?: string }) => p.text ?? "")
-      .join("") ?? "";
+    data.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text ?? "").join("") ??
+    "";
 
   return {
     text,

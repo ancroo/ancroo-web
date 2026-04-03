@@ -22,10 +22,7 @@ async function getBackendUrl(): Promise<string> {
 }
 
 /** Make an authenticated API request using Bearer token. */
-async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const apiBase = await getApiBase();
   const backendUrl = await getBackendUrl();
   const token = await getAccessToken(backendUrl);
@@ -45,9 +42,7 @@ async function apiFetch<T>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      throw new Error(
-        "Not logged in. Please sign in to your Ancroo server first."
-      );
+      throw new Error("Not logged in. Please sign in to your Ancroo server first.");
     }
     const body = await response.text();
     const lower = body.toLowerCase();
@@ -57,23 +52,21 @@ async function apiFetch<T>(
       lower.includes("model") &&
       (lower.includes("not found") || lower.includes("does not exist"))
     ) {
-      const modelMatch =
-        body.match(/"model":\s*"([^"]+)"/i) ||
-        body.match(/model[:\s]+(\S+)/i);
+      const modelMatch = body.match(/"model":\s*"([^"]+)"/i) || body.match(/model[:\s]+(\S+)/i);
       const modelName = modelMatch?.[1] ?? "unknown";
       throw new Error(
         `Model "${modelName}" is not installed in Ollama. ` +
-          `Pull it first: docker exec ollama ollama pull ${modelName}`
+          `Pull it first: docker exec ollama ollama pull ${modelName}`,
       );
     }
     if (response.status === 504 || lower.includes("timeout")) {
       throw new Error(
-        "The AI model took too long to respond. Try a smaller model or shorter input text."
+        "The AI model took too long to respond. Try a smaller model or shorter input text.",
       );
     }
     if (response.status === 503 || lower.includes("service unavailable")) {
       throw new Error(
-        "The backend service is not available. Check that all containers are running."
+        "The backend service is not available. Check that all containers are running.",
       );
     }
 
@@ -107,14 +100,23 @@ function normalizeRecipe(recipe: unknown): Workflow["recipe"] {
   let collect: CollectionRecipe["collect"] = [];
   if (Array.isArray(r.collect)) {
     collect = r.collect;
-  } else if (r.collect && typeof r.collect === "object" && Array.isArray((r.collect as Record<string, unknown>).sources)) {
+  } else if (
+    r.collect &&
+    typeof r.collect === "object" &&
+    Array.isArray((r.collect as Record<string, unknown>).sources)
+  ) {
     collect = (r.collect as Record<string, unknown>).sources as CollectionRecipe["collect"];
   }
   return {
     collect,
-    form_fields: Array.isArray(r.form_fields) ? r.form_fields : (r.collect as Record<string, unknown>)?.form_fields as typeof undefined,
-    output_fields: Array.isArray(r.output_fields) ? r.output_fields : (r.collect as Record<string, unknown>)?.output_fields as typeof undefined,
-    file_config: (r.file_config ?? (r.collect as Record<string, unknown>)?.file) as typeof undefined,
+    form_fields: Array.isArray(r.form_fields)
+      ? r.form_fields
+      : ((r.collect as Record<string, unknown>)?.form_fields as typeof undefined),
+    output_fields: Array.isArray(r.output_fields)
+      ? r.output_fields
+      : ((r.collect as Record<string, unknown>)?.output_fields as typeof undefined),
+    file_config: (r.file_config ??
+      (r.collect as Record<string, unknown>)?.file) as typeof undefined,
   };
 }
 
@@ -130,7 +132,7 @@ export async function listWorkflows(): Promise<Workflow[]> {
 /** Execute a workflow with the given input. */
 export async function executeWorkflow(
   slug: string,
-  inputData: InputDataPacket
+  inputData: InputDataPacket,
 ): Promise<ExecuteWorkflowResponse> {
   return apiFetch<ExecuteWorkflowResponse>(`/workflows/${slug}/execute`, {
     method: "POST",

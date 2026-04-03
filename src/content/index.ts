@@ -10,12 +10,16 @@ import { smartInsertText, smartInsertBefore, smartInsertAfter } from "./text-ins
 
 let lastFocusedInput: HTMLTextAreaElement | HTMLInputElement | null = null;
 
-document.addEventListener("focus", (e) => {
-  const el = e.target;
-  if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
-    lastFocusedInput = el;
-  }
-}, true); // capture phase — fires before blur
+document.addEventListener(
+  "focus",
+  (e) => {
+    const el = e.target;
+    if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
+      lastFocusedInput = el;
+    }
+  },
+  true,
+); // capture phase — fires before blur
 
 function getInputSelection(): string {
   const el = lastFocusedInput;
@@ -60,18 +64,21 @@ let hotkeyBindings: HotkeyBinding[] = [];
 // Wrapped in try-catch to gracefully handle orphaned content scripts
 // ("Extension context invalidated" after extension reload).
 try {
-  chrome.storage.session.get(HOTKEY_STORAGE_KEY).then(async (data) => {
-    hotkeyBindings = (data[HOTKEY_STORAGE_KEY] as HotkeyBinding[] | undefined) ?? [];
-    if (hotkeyBindings.length === 0) {
-      const local = await chrome.storage.local.get(HOTKEY_STORAGE_KEY);
-      hotkeyBindings = (local[HOTKEY_STORAGE_KEY] as HotkeyBinding[] | undefined) ?? [];
-      if (hotkeyBindings.length > 0) {
-        await chrome.storage.session.set({ [HOTKEY_STORAGE_KEY]: hotkeyBindings });
-      } else {
-        chrome.runtime.sendMessage({ type: "REFRESH_HOTKEYS" });
+  chrome.storage.session
+    .get(HOTKEY_STORAGE_KEY)
+    .then(async (data) => {
+      hotkeyBindings = (data[HOTKEY_STORAGE_KEY] as HotkeyBinding[] | undefined) ?? [];
+      if (hotkeyBindings.length === 0) {
+        const local = await chrome.storage.local.get(HOTKEY_STORAGE_KEY);
+        hotkeyBindings = (local[HOTKEY_STORAGE_KEY] as HotkeyBinding[] | undefined) ?? [];
+        if (hotkeyBindings.length > 0) {
+          await chrome.storage.session.set({ [HOTKEY_STORAGE_KEY]: hotkeyBindings });
+        } else {
+          chrome.runtime.sendMessage({ type: "REFRESH_HOTKEYS" });
+        }
       }
-    }
-  }).catch(() => {});
+    })
+    .catch(() => {});
 } catch {
   // Orphaned content script — silently ignore
 }
@@ -134,203 +141,216 @@ function clearRecordingState(): void {
 
 // Validate selectors to prevent targeting arbitrary DOM elements.
 // Only allow selectors that target form-related elements.
-const ALLOWED_SELECTOR_RE = /^(input|textarea|select|label|form|fieldset|option|optgroup|button|datalist|output)\b/i;
+const ALLOWED_SELECTOR_RE =
+  /^(input|textarea|select|label|form|fieldset|option|optgroup|button|datalist|output)\b/i;
 function isAllowedSelector(selector: string): boolean {
   return ALLOWED_SELECTOR_RE.test(selector.trimStart());
 }
 
 // Listen for messages from the background script
-chrome.runtime.onMessage.addListener(
-  (message: ExtensionMessage, sender, sendResponse) => {
-    // Only accept messages from our own extension
-    if (sender.id !== chrome.runtime.id) {
-      return false;
-    }
-
-    if (message.type === "GET_SELECTION") {
-      // 1. Check last focused textarea/input (selectionStart/End survive blur)
-      let text = getInputSelection();
-      let html = "";
-
-      // 2. Fall back to regular DOM selection
-      if (!text) {
-        const sel = window.getSelection();
-        text = sel?.toString() ?? "";
-        if (text.length > 0 && sel && sel.rangeCount > 0) {
-          const container = document.createElement("div");
-          container.appendChild(sel.getRangeAt(0).cloneContents());
-          html = container.innerHTML;
-        }
-      }
-      // 3. Fall back to cached selection (lost when side panel takes focus)
-      if (!text && cachedSelectionText) {
-        text = cachedSelectionText;
-        html = cachedSelectionHtml;
-      }
-      sendResponse({
-        type: "SELECTION_RESULT",
-        text,
-        html,
-        url: window.location.href,
-        title: document.title,
-      });
-      return true;
-    }
-
-    if (message.type === "GET_PAGE_HTML") {
-      sendResponse({
-        type: "PAGE_HTML_RESULT",
-        html: document.documentElement.outerHTML,
-        url: window.location.href,
-        title: document.title,
-      });
-      return true;
-    }
-
-    if (message.type === "INSERT_TEXT") {
-      smartInsertText(message.text).then((success) => {
-        sendResponse({
-          type: "INSERT_RESULT",
-          success,
-        });
-      });
-      return true; // keep channel open for async sendResponse
-    }
-
-    if (message.type === "INSERT_BEFORE") {
-      smartInsertBefore(message.text).then((success) => {
-        sendResponse({ type: "INSERT_RESULT", success });
-      });
-      return true;
-    }
-
-    if (message.type === "INSERT_AFTER") {
-      smartInsertAfter(message.text).then((success) => {
-        sendResponse({ type: "INSERT_RESULT", success });
-      });
-      return true;
-    }
-
-    if (message.type === "GET_FORM_FIELDS") {
-      const result: Record<string, string> = {};
-      for (const field of message.fields) {
-        try {
-          if (!isAllowedSelector(field.selector)) continue;
-          const el = document.querySelector(field.selector);
-          if (el) {
-            if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
-              result[field.name] = el.value;
-            } else {
-              result[field.name] = el.textContent ?? "";
-            }
-          }
-        } catch {
-          continue;
-        }
-      }
-      sendResponse({ type: "FORM_FIELDS_RESULT", fields: result });
-      return true;
-    }
-
-    if (message.type === "SET_FORM_FIELDS") {
-      const errors: string[] = [];
-      let setCount = 0;
-      for (const [key, { selector, value }] of Object.entries(message.fields)) {
-        try {
-          if (!isAllowedSelector(selector)) {
-            errors.push(`Blocked selector for "${key}": ${selector}`);
-            continue;
-          }
-          const el = document.querySelector(selector);
-          if (!el) {
-            errors.push(`No element found for "${key}" (${selector})`);
-            continue;
-          }
-          if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
-            const proto = el instanceof HTMLTextAreaElement
-              ? HTMLTextAreaElement.prototype
-              : HTMLInputElement.prototype;
-            const nativeSetter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
-            if (nativeSetter) {
-              nativeSetter.call(el, value);
-            } else {
-              el.value = value;
-            }
-            el.dispatchEvent(new Event("input", { bubbles: true }));
-            el.dispatchEvent(new Event("change", { bubbles: true }));
-            setCount++;
-          } else if (el instanceof HTMLSelectElement) {
-            el.value = value;
-            el.dispatchEvent(new Event("change", { bubbles: true }));
-            setCount++;
-          } else {
-            el.textContent = value;
-            setCount++;
-          }
-        } catch (err) {
-          errors.push(`Error setting "${key}": ${err}`);
-        }
-      }
-      sendResponse({ type: "SET_FORM_FIELDS_RESULT", success: errors.length === 0, set_count: setCount, errors });
-      return true;
-    }
-
-    // Recording is started via chrome.scripting.executeScript from the side panel,
-    // which stores MediaRecorder state in globalThis.__ancrooRecording (isolated world shared).
-    if (message.type === "STOP_RECORDING") {
-      const state = getRecordingState();
-
-      if (!state.recorder || state.recorder.state === "inactive") {
-        sendResponse({ success: false, error: "Not recording" });
-        return true;
-      }
-
-      const { recorder, stream, chunks, mimeType } = state;
-      const resolvedMimeType = mimeType ?? "audio/webm";
-
-      recorder.onstop = async () => {
-        const blob = new Blob(chunks ?? [], { type: resolvedMimeType });
-        const arrayBuffer = await blob.arrayBuffer();
-        stream?.getTracks().forEach((t) => t.stop());
-        clearRecordingState();
-        sendResponse({ success: true, audioData: arrayBuffer, mimeType: resolvedMimeType });
-      };
-
-      recorder.stop();
-      return true; // keep channel open for async sendResponse
-    }
-
-    if (message.type === "CANCEL_RECORDING") {
-      const state = getRecordingState();
-      if (state.recorder && state.recorder.state !== "inactive") {
-        state.recorder.stop();
-      }
-      state.stream?.getTracks().forEach((t) => t.stop());
-      clearRecordingState();
-      sendResponse({ success: true });
-      return true;
-    }
-
-    if (message.type === "SHOW_TOAST") {
-      showToast(message.text, message.variant, message.duration);
-      return false;
-    }
-
-    if (message.type === "HIDE_TOAST") {
-      hideToast();
-      return false;
-    }
-
+chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
+  // Only accept messages from our own extension
+  if (sender.id !== chrome.runtime.id) {
     return false;
   }
-);
+
+  if (message.type === "GET_SELECTION") {
+    // 1. Check last focused textarea/input (selectionStart/End survive blur)
+    let text = getInputSelection();
+    let html = "";
+
+    // 2. Fall back to regular DOM selection
+    if (!text) {
+      const sel = window.getSelection();
+      text = sel?.toString() ?? "";
+      if (text.length > 0 && sel && sel.rangeCount > 0) {
+        const container = document.createElement("div");
+        container.appendChild(sel.getRangeAt(0).cloneContents());
+        html = container.innerHTML;
+      }
+    }
+    // 3. Fall back to cached selection (lost when side panel takes focus)
+    if (!text && cachedSelectionText) {
+      text = cachedSelectionText;
+      html = cachedSelectionHtml;
+    }
+    sendResponse({
+      type: "SELECTION_RESULT",
+      text,
+      html,
+      url: window.location.href,
+      title: document.title,
+    });
+    return true;
+  }
+
+  if (message.type === "GET_PAGE_HTML") {
+    sendResponse({
+      type: "PAGE_HTML_RESULT",
+      html: document.documentElement.outerHTML,
+      url: window.location.href,
+      title: document.title,
+    });
+    return true;
+  }
+
+  if (message.type === "INSERT_TEXT") {
+    smartInsertText(message.text).then((success) => {
+      sendResponse({
+        type: "INSERT_RESULT",
+        success,
+      });
+    });
+    return true; // keep channel open for async sendResponse
+  }
+
+  if (message.type === "INSERT_BEFORE") {
+    smartInsertBefore(message.text).then((success) => {
+      sendResponse({ type: "INSERT_RESULT", success });
+    });
+    return true;
+  }
+
+  if (message.type === "INSERT_AFTER") {
+    smartInsertAfter(message.text).then((success) => {
+      sendResponse({ type: "INSERT_RESULT", success });
+    });
+    return true;
+  }
+
+  if (message.type === "GET_FORM_FIELDS") {
+    const result: Record<string, string> = {};
+    for (const field of message.fields) {
+      try {
+        if (!isAllowedSelector(field.selector)) continue;
+        const el = document.querySelector(field.selector);
+        if (el) {
+          if (
+            el instanceof HTMLInputElement ||
+            el instanceof HTMLTextAreaElement ||
+            el instanceof HTMLSelectElement
+          ) {
+            result[field.name] = el.value;
+          } else {
+            result[field.name] = el.textContent ?? "";
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+    sendResponse({ type: "FORM_FIELDS_RESULT", fields: result });
+    return true;
+  }
+
+  if (message.type === "SET_FORM_FIELDS") {
+    const errors: string[] = [];
+    let setCount = 0;
+    for (const [key, { selector, value }] of Object.entries(message.fields)) {
+      try {
+        if (!isAllowedSelector(selector)) {
+          errors.push(`Blocked selector for "${key}": ${selector}`);
+          continue;
+        }
+        const el = document.querySelector(selector);
+        if (!el) {
+          errors.push(`No element found for "${key}" (${selector})`);
+          continue;
+        }
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+          const proto =
+            el instanceof HTMLTextAreaElement
+              ? HTMLTextAreaElement.prototype
+              : HTMLInputElement.prototype;
+          const nativeSetter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
+          if (nativeSetter) {
+            nativeSetter.call(el, value);
+          } else {
+            el.value = value;
+          }
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+          setCount++;
+        } else if (el instanceof HTMLSelectElement) {
+          el.value = value;
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+          setCount++;
+        } else {
+          el.textContent = value;
+          setCount++;
+        }
+      } catch (err) {
+        errors.push(`Error setting "${key}": ${err}`);
+      }
+    }
+    sendResponse({
+      type: "SET_FORM_FIELDS_RESULT",
+      success: errors.length === 0,
+      set_count: setCount,
+      errors,
+    });
+    return true;
+  }
+
+  // Recording is started via chrome.scripting.executeScript from the side panel,
+  // which stores MediaRecorder state in globalThis.__ancrooRecording (isolated world shared).
+  if (message.type === "STOP_RECORDING") {
+    const state = getRecordingState();
+
+    if (!state.recorder || state.recorder.state === "inactive") {
+      sendResponse({ success: false, error: "Not recording" });
+      return true;
+    }
+
+    const { recorder, stream, chunks, mimeType } = state;
+    const resolvedMimeType = mimeType ?? "audio/webm";
+
+    recorder.onstop = async () => {
+      const blob = new Blob(chunks ?? [], { type: resolvedMimeType });
+      const arrayBuffer = await blob.arrayBuffer();
+      stream?.getTracks().forEach((t) => t.stop());
+      clearRecordingState();
+      sendResponse({ success: true, audioData: arrayBuffer, mimeType: resolvedMimeType });
+    };
+
+    recorder.stop();
+    return true; // keep channel open for async sendResponse
+  }
+
+  if (message.type === "CANCEL_RECORDING") {
+    const state = getRecordingState();
+    if (state.recorder && state.recorder.state !== "inactive") {
+      state.recorder.stop();
+    }
+    state.stream?.getTracks().forEach((t) => t.stop());
+    clearRecordingState();
+    sendResponse({ success: true });
+    return true;
+  }
+
+  if (message.type === "SHOW_TOAST") {
+    showToast(message.text, message.variant, message.duration);
+    return false;
+  }
+
+  if (message.type === "HIDE_TOAST") {
+    hideToast();
+    return false;
+  }
+
+  return false;
+});
 
 // --- Toast overlay for hotkey feedback ---
 
 const TOAST_ID = "__ancroo-toast";
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
-function showToast(text: string, variant: "processing" | "success" | "error", duration?: number): void {
+function showToast(
+  text: string,
+  variant: "processing" | "success" | "error",
+  duration?: number,
+): void {
   let el = document.getElementById(TOAST_ID);
   if (!el) {
     el = document.createElement("div");

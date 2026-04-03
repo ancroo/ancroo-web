@@ -16,9 +16,7 @@ interface VersionInfo {
 
 function getVersionInfo(): VersionInfo {
   try {
-    const describe = execSync("git describe --tags --always --match 'v*'")
-      .toString()
-      .trim();
+    const describe = execSync("git describe --tags --always --match 'v*'").toString().trim();
     const commit = execSync("git rev-parse --short HEAD").toString().trim();
 
     // Exactly on a tag: "v1.2.3"

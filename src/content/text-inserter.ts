@@ -27,8 +27,9 @@ export async function smartInsertText(text: string): Promise<boolean> {
   if (selection && selection.rangeCount > 0) {
     const range = selection.getRangeAt(0);
     const container = range.commonAncestorContainer;
-    const editableParent = (container instanceof Element ? container : container.parentElement)
-      ?.closest("[contenteditable='true']");
+    const editableParent = (
+      container instanceof Element ? container : container.parentElement
+    )?.closest("[contenteditable='true']");
 
     if (editableParent) {
       return insertIntoContentEditable(text);
@@ -50,10 +51,7 @@ function insertIntoContentEditable(text: string): boolean {
 }
 
 /** Insert text into an input or textarea element. */
-function insertIntoInput(
-  element: HTMLInputElement | HTMLTextAreaElement,
-  text: string
-): boolean {
+function insertIntoInput(element: HTMLInputElement | HTMLTextAreaElement, text: string): boolean {
   const start = element.selectionStart ?? 0;
   const end = element.selectionEnd ?? 0;
 
@@ -62,13 +60,12 @@ function insertIntoInput(
     element instanceof HTMLTextAreaElement
       ? HTMLTextAreaElement.prototype
       : HTMLInputElement.prototype,
-    "value"
+    "value",
   )?.set;
 
   if (nativeInputValueSetter) {
     const currentValue = element.value;
-    const newValue =
-      currentValue.substring(0, start) + text + currentValue.substring(end);
+    const newValue = currentValue.substring(0, start) + text + currentValue.substring(end);
     nativeInputValueSetter.call(element, newValue);
 
     // Dispatch events to notify frameworks
@@ -97,11 +94,14 @@ export async function smartInsertBefore(text: string): Promise<boolean> {
       activeElement instanceof HTMLTextAreaElement
         ? HTMLTextAreaElement.prototype
         : HTMLInputElement.prototype,
-      "value"
+      "value",
     )?.set;
     if (nativeSetter) {
       const val = activeElement.value;
-      nativeSetter.call(activeElement, val.substring(0, start) + text + "\n" + val.substring(start));
+      nativeSetter.call(
+        activeElement,
+        val.substring(0, start) + text + "\n" + val.substring(start),
+      );
       activeElement.dispatchEvent(new Event("input", { bubbles: true }));
       activeElement.dispatchEvent(new Event("change", { bubbles: true }));
       activeElement.setSelectionRange(start, start);
@@ -115,9 +115,13 @@ export async function smartInsertBefore(text: string): Promise<boolean> {
   if (selection && selection.rangeCount > 0) {
     const range = selection.getRangeAt(0);
     const container = range.commonAncestorContainer;
-    const editableParent = (container instanceof Element ? container : container.parentElement)
-      ?.closest("[contenteditable='true']");
-    if (editableParent || (activeElement && activeElement.getAttribute("contenteditable") === "true")) {
+    const editableParent = (
+      container instanceof Element ? container : container.parentElement
+    )?.closest("[contenteditable='true']");
+    if (
+      editableParent ||
+      (activeElement && activeElement.getAttribute("contenteditable") === "true")
+    ) {
       const insertRange = document.createRange();
       insertRange.setStart(range.startContainer, range.startOffset);
       insertRange.collapse(true);
@@ -148,7 +152,7 @@ export async function smartInsertAfter(text: string): Promise<boolean> {
       activeElement instanceof HTMLTextAreaElement
         ? HTMLTextAreaElement.prototype
         : HTMLInputElement.prototype,
-      "value"
+      "value",
     )?.set;
     if (nativeSetter) {
       const val = activeElement.value;
@@ -167,9 +171,13 @@ export async function smartInsertAfter(text: string): Promise<boolean> {
   if (selection && selection.rangeCount > 0) {
     const range = selection.getRangeAt(0);
     const container = range.commonAncestorContainer;
-    const editableParent = (container instanceof Element ? container : container.parentElement)
-      ?.closest("[contenteditable='true']");
-    if (editableParent || (activeElement && activeElement.getAttribute("contenteditable") === "true")) {
+    const editableParent = (
+      container instanceof Element ? container : container.parentElement
+    )?.closest("[contenteditable='true']");
+    if (
+      editableParent ||
+      (activeElement && activeElement.getAttribute("contenteditable") === "true")
+    ) {
       const insertRange = document.createRange();
       insertRange.setStart(range.endContainer, range.endOffset);
       insertRange.collapse(true);

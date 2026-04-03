@@ -6,10 +6,7 @@ export function AboutPanel({ onClose }: { onClose: () => void }) {
     <div class="flex flex-col h-screen">
       <div class="flex items-center justify-between p-3 border-b bg-white">
         <h1 class="font-bold text-sm">About Ancroo</h1>
-        <button
-          onClick={onClose}
-          class="text-xs text-gray-400 hover:text-gray-600"
-        >
+        <button onClick={onClose} class="text-xs text-gray-400 hover:text-gray-600">
           Close
         </button>
       </div>
@@ -22,9 +19,7 @@ export function AboutPanel({ onClose }: { onClose: () => void }) {
             class="w-20 h-20 mx-auto rounded-2xl shadow-md mb-3"
           />
           <h2 class="text-lg font-bold text-gray-900">Ancroo</h2>
-          <p class="text-sm text-gray-500 mt-1">
-            AI Workflow Runner for your Browser
-          </p>
+          <p class="text-sm text-gray-500 mt-1">AI Workflow Runner for your Browser</p>
         </div>
 
         <div class="bg-white rounded-lg border divide-y">

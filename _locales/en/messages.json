@@ -1,0 +1,18 @@
+{
+  "extensionName": {
+    "message": "Ancroo",
+    "description": "The display name of the extension"
+  },
+  "extensionDescription": {
+    "message": "AI Workflow Runner for your Browser. Select text, trigger a workflow, get results — with any LLM API or a self-hosted backend.",
+    "description": "The description of the extension shown in the Chrome Web Store and extension management page"
+  },
+  "openSidePanel": {
+    "message": "Open Ancroo side panel",
+    "description": "Description for the keyboard shortcut that opens the side panel"
+  },
+  "contextMenuRun": {
+    "message": "Run with Ancroo",
+    "description": "Context menu item label for running a workflow on selected text"
+  }
+}

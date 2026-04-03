@@ -140,39 +140,47 @@ async function sleep(ms) {
  */
 async function selectText(page, elementId, elementType, selectAll) {
   if (elementType === "contenteditable") {
-    await page.evaluate((id, all) => {
-      const el = document.getElementById(id);
-      if (!el) throw new Error(`Element #${id} not found`);
-      el.focus();
-      const range = document.createRange();
-      if (all) {
-        range.selectNodeContents(el);
-      } else {
-        // Select middle portion
-        const text = el.firstChild;
-        if (text) {
-          range.setStart(text, Math.floor(text.textContent.length * 0.3));
-          range.setEnd(text, Math.floor(text.textContent.length * 0.7));
+    await page.evaluate(
+      (id, all) => {
+        const el = document.getElementById(id);
+        if (!el) throw new Error(`Element #${id} not found`);
+        el.focus();
+        const range = document.createRange();
+        if (all) {
+          range.selectNodeContents(el);
+        } else {
+          // Select middle portion
+          const text = el.firstChild;
+          if (text) {
+            range.setStart(text, Math.floor(text.textContent.length * 0.3));
+            range.setEnd(text, Math.floor(text.textContent.length * 0.7));
+          }
         }
-      }
-      const sel = window.getSelection();
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }, elementId, selectAll);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      },
+      elementId,
+      selectAll,
+    );
   } else {
     // input or textarea
-    await page.evaluate((id, all) => {
-      const el = document.getElementById(id);
-      if (!el) throw new Error(`Element #${id} not found`);
-      el.focus();
-      if (all) {
-        el.select();
-      } else {
-        // Select middle portion
-        const len = el.value.length;
-        el.setSelectionRange(Math.floor(len * 0.3), Math.floor(len * 0.7));
-      }
-    }, elementId, selectAll);
+    await page.evaluate(
+      (id, all) => {
+        const el = document.getElementById(id);
+        if (!el) throw new Error(`Element #${id} not found`);
+        el.focus();
+        if (all) {
+          el.select();
+        } else {
+          // Select middle portion
+          const len = el.value.length;
+          el.setSelectionRange(Math.floor(len * 0.3), Math.floor(len * 0.7));
+        }
+      },
+      elementId,
+      selectAll,
+    );
   }
 }
 
@@ -180,26 +188,34 @@ async function selectText(page, elementId, elementType, selectAll) {
  * Get the selected text from the page.
  */
 async function getSelectedText(page, elementId, elementType) {
-  return page.evaluate((id, type) => {
-    if (type === "contenteditable") {
-      return window.getSelection()?.toString() ?? "";
-    }
-    const el = document.getElementById(id);
-    if (!el) return "";
-    return el.value.substring(el.selectionStart, el.selectionEnd);
-  }, elementId, elementType);
+  return page.evaluate(
+    (id, type) => {
+      if (type === "contenteditable") {
+        return window.getSelection()?.toString() ?? "";
+      }
+      const el = document.getElementById(id);
+      if (!el) return "";
+      return el.value.substring(el.selectionStart, el.selectionEnd);
+    },
+    elementId,
+    elementType,
+  );
 }
 
 /**
  * Get the full content of an element (for before/after comparison).
  */
 async function getElementContent(page, elementId, elementType) {
-  return page.evaluate((id, type) => {
-    const el = document.getElementById(id);
-    if (!el) return "";
-    if (type === "contenteditable") return el.textContent ?? "";
-    return el.value;
-  }, elementId, elementType);
+  return page.evaluate(
+    (id, type) => {
+      const el = document.getElementById(id);
+      if (!el) return "";
+      if (type === "contenteditable") return el.textContent ?? "";
+      return el.value;
+    },
+    elementId,
+    elementType,
+  );
 }
 
 /**
@@ -238,8 +254,10 @@ async function applyOutputAction(page, action, text, workflow) {
       if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
         const start = active.selectionStart ?? 0;
         const end = active.selectionEnd ?? 0;
-        const proto = active instanceof HTMLTextAreaElement
-          ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        const proto =
+          active instanceof HTMLTextAreaElement
+            ? HTMLTextAreaElement.prototype
+            : HTMLInputElement.prototype;
         const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
         if (setter) {
           const val = active.value;
@@ -259,8 +277,10 @@ async function applyOutputAction(page, action, text, workflow) {
       const active = document.activeElement;
       if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
         const start = active.selectionStart ?? 0;
-        const proto = active instanceof HTMLTextAreaElement
-          ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        const proto =
+          active instanceof HTMLTextAreaElement
+            ? HTMLTextAreaElement.prototype
+            : HTMLInputElement.prototype;
         const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
         if (setter) {
           const val = active.value;
@@ -292,8 +312,10 @@ async function applyOutputAction(page, action, text, workflow) {
       const active = document.activeElement;
       if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) {
         const end = active.selectionEnd ?? active.value.length;
-        const proto = active instanceof HTMLTextAreaElement
-          ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+        const proto =
+          active instanceof HTMLTextAreaElement
+            ? HTMLTextAreaElement.prototype
+            : HTMLInputElement.prototype;
         const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set;
         if (setter) {
           const val = active.value;
@@ -332,7 +354,8 @@ async function applyOutputAction(page, action, text, workflow) {
       if (!el) {
         el = document.createElement("div");
         el.id = "__ancroo-toast";
-        el.style.cssText = "position:fixed;bottom:24px;right:24px;z-index:2147483647;padding:10px 18px;border-radius:8px;font:14px/1.4 -apple-system,sans-serif;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.25);background:#22c55e;opacity:1;";
+        el.style.cssText =
+          "position:fixed;bottom:24px;right:24px;z-index:2147483647;padding:10px 18px;border-radius:8px;font:14px/1.4 -apple-system,sans-serif;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.25);background:#22c55e;opacity:1;";
         document.documentElement.appendChild(el);
       }
       el.textContent = `✔  ${t}`;
@@ -464,7 +487,9 @@ async function main() {
       let details = "";
 
       if (test.action === "replace_selection") {
-        passed = contentAfter !== contentBefore && contentAfter.includes(resultText.trim().substring(0, 30));
+        passed =
+          contentAfter !== contentBefore &&
+          contentAfter.includes(resultText.trim().substring(0, 30));
         details = passed
           ? `Text replaced: "${contentAfter.substring(0, 60)}..."`
           : `Content unchanged or result not found. After: "${contentAfter.substring(0, 60)}..."`;
@@ -493,11 +518,12 @@ async function main() {
       const status = passed ? "PASS" : "FAIL";
       console.log(`   ${passed ? "✔" : "✘"} ${status}: ${details}`);
       results.push({ ...test, status, details, resultText: resultText?.substring(0, 100) });
-
     } catch (err) {
       console.log(`   ✘ ERROR: ${err.message}`);
       results.push({ ...test, status: "ERROR", reason: err.message });
-      await page.screenshot({ path: path.join(SCREENSHOT_DIR, `${prefix}-error.png`) }).catch(() => {});
+      await page
+        .screenshot({ path: path.join(SCREENSHOT_DIR, `${prefix}-error.png`) })
+        .catch(() => {});
     }
 
     console.log("");
@@ -519,11 +545,14 @@ async function main() {
   const skipped = results.filter((r) => r.status === "SKIP").length;
 
   for (const r of results) {
-    const icon = r.status === "PASS" ? "✔" : r.status === "FAIL" ? "✘" : r.status === "SKIP" ? "⊘" : "⚠";
+    const icon =
+      r.status === "PASS" ? "✔" : r.status === "FAIL" ? "✘" : r.status === "SKIP" ? "⊘" : "⚠";
     console.log(`  ${icon} ${r.name.padEnd(42)} ${r.status}`);
   }
 
-  console.log(`\n  Total: ${results.length} | Pass: ${passed} | Fail: ${failed} | Error: ${errors} | Skip: ${skipped}`);
+  console.log(
+    `\n  Total: ${results.length} | Pass: ${passed} | Fail: ${failed} | Error: ${errors} | Skip: ${skipped}`,
+  );
   console.log(`  Screenshots saved to: ${SCREENSHOT_DIR}/\n`);
 
   await browser.close();

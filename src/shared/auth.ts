@@ -215,10 +215,7 @@ export async function getAccessToken(backendUrl: string): Promise<string | null>
   }
 }
 
-async function refreshTokens(
-  backendUrl: string,
-  refreshToken: string,
-): Promise<AuthTokens> {
+async function refreshTokens(backendUrl: string, refreshToken: string): Promise<AuthTokens> {
   const res = await fetch(`${backendUrl}/api/v1/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

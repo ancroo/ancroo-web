@@ -11,17 +11,13 @@ export async function listLocalWorkflows(): Promise<LocalWorkflow[]> {
 }
 
 /** Get a single local workflow by slug. */
-export async function getLocalWorkflow(
-  slug: string,
-): Promise<LocalWorkflow | null> {
+export async function getLocalWorkflow(slug: string): Promise<LocalWorkflow | null> {
   const all = await listLocalWorkflows();
   return all.find((w) => w.slug === slug) ?? null;
 }
 
 /** Save a local workflow (create or update by slug). */
-export async function saveLocalWorkflow(
-  workflow: LocalWorkflow,
-): Promise<void> {
+export async function saveLocalWorkflow(workflow: LocalWorkflow): Promise<void> {
   const all = await listLocalWorkflows();
   const idx = all.findIndex((w) => w.slug === workflow.slug);
   if (idx >= 0) {
@@ -40,10 +36,7 @@ export async function deleteLocalWorkflow(slug: string): Promise<void> {
 }
 
 /** Seed starter workflows if none exist yet. Sets provider_id on all starters. */
-export async function seedStarterWorkflows(
-  providerId: string,
-  model: string,
-): Promise<void> {
+export async function seedStarterWorkflows(providerId: string, model: string): Promise<void> {
   const existing = await listLocalWorkflows();
   if (existing.length > 0) return;
 
@@ -95,10 +88,7 @@ function makeStarter(
 }
 
 /** Return the built-in starter workflows. */
-export function getStarterWorkflows(
-  providerId: string,
-  model: string,
-): LocalWorkflow[] {
+export function getStarterWorkflows(providerId: string, model: string): LocalWorkflow[] {
   return [
     makeStarter(
       "Summarize",

@@ -30,7 +30,7 @@ export function MicrophoneSelector({
           msg.toLowerCase().includes("permission")
         ) {
           setError(
-            "Microphone permission denied. Allow microphone access in your browser settings for this extension, then try again."
+            "Microphone permission denied. Allow microphone access in your browser settings for this extension, then try again.",
           );
         } else {
           setError(`Microphone error: ${msg}`);
@@ -41,14 +41,12 @@ export function MicrophoneSelector({
       setDevices(
         (response.devices ?? []).map(
           (d: { deviceId: string; label: string }) =>
-            ({ deviceId: d.deviceId, label: d.label }) as MediaDeviceInfo
-        )
+            ({ deviceId: d.deviceId, label: d.label }) as MediaDeviceInfo,
+        ),
       );
       setLoaded(true);
     } catch (err) {
-      setError(
-        `Microphone error: ${err instanceof Error ? err.message : String(err)}`
-      );
+      setError(`Microphone error: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setLoading(false);
     }
@@ -59,19 +57,14 @@ export function MicrophoneSelector({
   }, []);
 
   if (loading) {
-    return (
-      <div class="text-xs text-gray-500">Requesting microphone access...</div>
-    );
+    return <div class="text-xs text-gray-500">Requesting microphone access...</div>;
   }
 
   if (error) {
     return (
       <div class="space-y-1">
         <div class="text-xs text-amber-600">{error}</div>
-        <button
-          onClick={loadDevices}
-          class="text-xs text-blue-600 hover:text-blue-700"
-        >
+        <button onClick={loadDevices} class="text-xs text-blue-600 hover:text-blue-700">
           Retry
         </button>
       </div>

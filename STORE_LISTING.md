@@ -68,17 +68,17 @@ https://github.com/ancroo/ancroo-web/blob/main/PRIVACY_POLICY.md
 
 ## Screenshots (1280x800)
 
-| # | File | Content |
-|---|------|---------|
-| 1 | `store/ancroo.png` | Side panel with workflow list |
-| 2 | `store/ancroo_dm_context.png` | Context menu on selected text |
-| 3 | `store/ancroo_dm_fixed_grammer.png` | Workflow result (Fix Grammar) |
-| 4 | `store/ancroo_dm_settings.png` | Provider configuration |
-| 5 | `store/ancroo_dm_new_workflow.png` | Workflow editor |
+| #   | File                                | Content                       |
+| --- | ----------------------------------- | ----------------------------- |
+| 1   | `store/ancroo.png`                  | Side panel with workflow list |
+| 2   | `store/ancroo_dm_context.png`       | Context menu on selected text |
+| 3   | `store/ancroo_dm_fixed_grammer.png` | Workflow result (Fix Grammar) |
+| 4   | `store/ancroo_dm_settings.png`      | Provider configuration        |
+| 5   | `store/ancroo_dm_new_workflow.png`  | Workflow editor               |
 
 ## Promotional Images
 
-| File | Size | Purpose |
-|------|------|---------|
-| `store/promo-small.png` | 440x280 | Small tile (store search results) |
-| `store/promo-marquee.png` | 1400x560 | Marquee banner (featured) |
+| File                      | Size     | Purpose                           |
+| ------------------------- | -------- | --------------------------------- |
+| `store/promo-small.png`   | 440x280  | Small tile (store search results) |
+| `store/promo-marquee.png` | 1400x560 | Marquee banner (featured)         |

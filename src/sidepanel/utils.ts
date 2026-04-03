@@ -13,7 +13,9 @@ export function needsAudioInput(workflow: Workflow): boolean {
 
 /** Check if a workflow requires manual text input. */
 export function needsManualInput(workflow: Workflow): boolean {
-  return Array.isArray(workflow.recipe?.collect) && workflow.recipe.collect.includes("manual_input");
+  return (
+    Array.isArray(workflow.recipe?.collect) && workflow.recipe.collect.includes("manual_input")
+  );
 }
 
 /** Format file size for display. */
@@ -40,17 +42,24 @@ export function friendlyError(msg: string): string {
   const lower = msg.toLowerCase();
   if (lower.includes("permission") || lower.includes("manifest"))
     return "Cannot access this page. Select text on a regular webpage, then click a workflow.";
-  if (lower.includes("no tab") || lower.includes("tab") && lower.includes("missing"))
+  if (lower.includes("no tab") || (lower.includes("tab") && lower.includes("missing")))
     return "No active tab found. Open a webpage and try again.";
   if (lower.includes("cannot access contents") || lower.includes("could not establish connection"))
     return "Could not connect to the page. Try refreshing the tab.";
-  if (lower.includes("failed to fetch") || lower.includes("networkerror") || lower.includes("econnrefused"))
+  if (
+    lower.includes("failed to fetch") ||
+    lower.includes("networkerror") ||
+    lower.includes("econnrefused")
+  )
     return "Cannot connect to the Ancroo server. Check that it is running.";
   return msg;
 }
 
 /** Return an emoji icon for a workflow category. Uses central definition, then workflow override, then fallback. */
-export function categoryIcon(workflow: { category?: string | null; category_icon?: string | null }): string {
+export function categoryIcon(workflow: {
+  category?: string | null;
+  category_icon?: string | null;
+}): string {
   const match = WORKFLOW_CATEGORIES.find((c) => c.value === workflow.category);
   if (match) return match.icon;
   return workflow.category_icon ?? "🔧";

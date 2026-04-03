@@ -5,10 +5,7 @@
 import type { InputDataPacket } from "./types";
 
 /** Replace {text}, {clipboard}, {html}, {url}, {title}, {fields} in a template string. */
-export function renderTemplate(
-  template: string,
-  data: InputDataPacket,
-): string {
+export function renderTemplate(template: string, data: InputDataPacket): string {
   const vars: Record<string, string> = {
     text: data.text ?? "",
     clipboard: data.clipboard ?? "",

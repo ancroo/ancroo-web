@@ -18,10 +18,22 @@ import type {
   InputDataPacket,
   FileConfig,
 } from "@/shared/types";
-import type { ExtensionMessage, SelectionResultMessage, FormFieldsResultMessage, PageHtmlResultMessage } from "@/shared/messages";
+import type {
+  ExtensionMessage,
+  SelectionResultMessage,
+  FormFieldsResultMessage,
+  PageHtmlResultMessage,
+} from "@/shared/messages";
 import { sendToTab } from "@/shared/tab-messaging";
 import { HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
-import { needsFileInput, needsAudioInput, needsManualInput, formatFileSize, friendlyError, categoryIcon } from "./utils";
+import {
+  needsFileInput,
+  needsAudioInput,
+  needsManualInput,
+  formatFileSize,
+  friendlyError,
+  categoryIcon,
+} from "./utils";
 import { RecordingArea } from "./RecordingArea";
 import { HistoryItem } from "./HistoryItem";
 import { FileUploadArea } from "./FileUploadArea";
@@ -69,7 +81,9 @@ export function App() {
   const [connectionMode, setConnectionMode] = useState<ConnectionMode>("backend");
   const [editingWorkflow, setEditingWorkflow] = useState<LocalWorkflow | null | "new">(null);
   const [showDirectSettings, setShowDirectSettings] = useState(false);
-  const [llmProviders, setLlmProviders] = useState<import("@/shared/settings").LLMProviderConfig[]>([]);
+  const [llmProviders, setLlmProviders] = useState<import("@/shared/settings").LLMProviderConfig[]>(
+    [],
+  );
 
   // Result display state
   const [resultText, setResultText] = useState<string | null>(null);
@@ -186,10 +200,12 @@ export function App() {
       // Check if a recording was triggered via hotkey before the panel was ready
       if (session.pendingRecording) {
         await chrome.storage.session.remove("pendingRecording");
-        const target = workflowList.find(
-          (w) => w.slug === session.pendingRecording
-        );
-        if (target && Array.isArray(target.recipe?.collect) && target.recipe.collect.includes("audio")) {
+        const target = workflowList.find((w) => w.slug === session.pendingRecording);
+        if (
+          target &&
+          Array.isArray(target.recipe?.collect) &&
+          target.recipe.collect.includes("audio")
+        ) {
           setPendingWorkflow(target);
           setAutoStartRecording(true);
         }
@@ -198,10 +214,12 @@ export function App() {
       // Check if a file workflow was triggered via hotkey
       if (session.pendingFileWorkflow) {
         await chrome.storage.session.remove("pendingFileWorkflow");
-        const target = workflowList.find(
-          (w) => w.slug === session.pendingFileWorkflow
-        );
-        if (target && Array.isArray(target.recipe?.collect) && target.recipe.collect.includes("file")) {
+        const target = workflowList.find((w) => w.slug === session.pendingFileWorkflow);
+        if (
+          target &&
+          Array.isArray(target.recipe?.collect) &&
+          target.recipe.collect.includes("file")
+        ) {
           setPendingWorkflow(target);
         }
       }
@@ -209,9 +227,7 @@ export function App() {
       // Check if a complex workflow was triggered via hotkey (needs side panel collection)
       if (session.pendingWorkflowSlug) {
         await chrome.storage.session.remove("pendingWorkflowSlug");
-        const target = workflowList.find(
-          (w) => w.slug === session.pendingWorkflowSlug
-        );
+        const target = workflowList.find((w) => w.slug === session.pendingWorkflowSlug);
         if (target) {
           // Execute the workflow through the normal side panel flow
           // Use setTimeout to avoid calling setState during render
@@ -263,7 +279,7 @@ export function App() {
 
   async function collectInputData(
     recipe: CollectionRecipe,
-    tabId: number
+    tabId: number,
   ): Promise<InputDataPacket> {
     const packet: InputDataPacket = {};
 
@@ -330,9 +346,8 @@ export function App() {
     resultText: string,
     tabId: number,
     outputFields?: { name: string; selector: string }[],
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ) {
-    console.debug("[ancroo] applyAction:", action);
     switch (action) {
       case "replace_selection":
       case "insert_text":
@@ -379,7 +394,10 @@ export function App() {
               };
             }
           }
-          await sendToTab(tabId, { type: "SET_FORM_FIELDS", fields: fieldsToSet } as ExtensionMessage);
+          await sendToTab(tabId, {
+            type: "SET_FORM_FIELDS",
+            fields: fieldsToSet,
+          } as ExtensionMessage);
           await sendToTab(tabId, {
             type: "SHOW_TOAST",
             text: "Fields updated",
@@ -554,8 +572,7 @@ export function App() {
       await chrome.storage.local.set({ history: newHistory });
 
       if (result.result?.success && result.result.text) {
-        const action =
-          workflow.output_action ?? result.result.action ?? "none";
+        const action = workflow.output_action ?? result.result.action ?? "none";
 
         if (
           action !== "replace_selection" &&
@@ -569,7 +586,13 @@ export function App() {
           setResultWorkflowName(workflow.name);
         }
 
-        await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields, result.result.metadata);
+        await applyAction(
+          action,
+          result.result.text,
+          tab.id,
+          workflow.recipe?.output_fields,
+          result.result.metadata,
+        );
       } else if (result.result && !result.result.success) {
         setError(result.result.error ?? `${workflow.name} failed`);
       } else if (result.result?.success && !result.result.text) {
@@ -603,17 +626,12 @@ export function App() {
         inputData = await collectInputData(workflow.recipe, tab.id);
       }
 
-      const result = await executeWorkflowWithFile(
-        workflow.slug,
-        inputData,
-        file,
-        (percent) => {
-          setUploadProgress(percent);
-          if (percent >= 100) {
-            setProcessing(true);
-          }
-        },
-      );
+      const result = await executeWorkflowWithFile(workflow.slug, inputData, file, (percent) => {
+        setUploadProgress(percent);
+        if (percent >= 100) {
+          setProcessing(true);
+        }
+      });
 
       // Add to history
       const entry: HistoryEntry = {
@@ -641,7 +659,13 @@ export function App() {
 
         // Also apply the configured action
         if (tab?.id) {
-          await applyAction(action, result.result.text, tab.id, workflow.recipe?.output_fields, result.result.metadata);
+          await applyAction(
+            action,
+            result.result.text,
+            tab.id,
+            workflow.recipe?.output_fields,
+            result.result.metadata,
+          );
         }
       } else if (result.result?.error) {
         setFileError(result.result.error);
@@ -677,7 +701,14 @@ export function App() {
 
   // Setup screen — shown on first use
   if (!setupDone) {
-    return <SetupScreen onComplete={() => { setSetupDone(true); loadData(); }} />;
+    return (
+      <SetupScreen
+        onComplete={() => {
+          setSetupDone(true);
+          loadData();
+        }}
+      />
+    );
   }
 
   // Login screen — shown when tokens are missing or expired
@@ -688,9 +719,7 @@ export function App() {
         <p class="text-sm text-gray-600 text-center">
           Sign in to your Ancroo server to get started.
         </p>
-        {error && (
-          <p class="text-red-600 text-center text-sm">{error}</p>
-        )}
+        {error && <p class="text-red-600 text-center text-sm">{error}</p>}
         <button
           onClick={handleLogin}
           disabled={loggingIn}
@@ -711,7 +740,16 @@ export function App() {
   if (error) {
     return (
       <div class="flex flex-col items-center justify-center h-screen p-6 gap-4">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#ef4444"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
           <circle cx="12" cy="12" r="10" />
           <line x1="12" y1="8" x2="12" y2="12" />
           <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -719,7 +757,10 @@ export function App() {
         <h2 class="text-base font-semibold text-gray-800">Something went wrong</h2>
         <p class="text-red-600 text-center text-sm">{error}</p>
         <button
-          onClick={() => { setError(null); loadData(); }}
+          onClick={() => {
+            setError(null);
+            loadData();
+          }}
           class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Retry
@@ -751,11 +792,15 @@ export function App() {
           setEditingWorkflow(null);
           await loadData();
         }}
-        onDelete={wf ? async (slug) => {
-          await deleteLocalWorkflow(slug);
-          setEditingWorkflow(null);
-          await loadData();
-        } : undefined}
+        onDelete={
+          wf
+            ? async (slug) => {
+                await deleteLocalWorkflow(slug);
+                setEditingWorkflow(null);
+                await loadData();
+              }
+            : undefined
+        }
         onCancel={() => setEditingWorkflow(null)}
       />
     );
@@ -765,7 +810,10 @@ export function App() {
   if (showDirectSettings && connectionMode === "direct") {
     return (
       <DirectModeSettings
-        onClose={() => { setShowDirectSettings(false); loadData(); }}
+        onClose={() => {
+          setShowDirectSettings(false);
+          loadData();
+        }}
         onSwitchToBackend={async () => {
           const current = await getSettings();
           await saveSettings({ ...current, connection_mode: "backend" });
@@ -783,7 +831,10 @@ export function App() {
         <div class="flex items-center justify-between p-3 border-b bg-white">
           <h1 class="font-bold text-sm">Ancroo</h1>
           <button
-            onClick={() => { setResultText(null); setCopied(false); }}
+            onClick={() => {
+              setResultText(null);
+              setCopied(false);
+            }}
             class="text-xs text-gray-400 hover:text-gray-600"
           >
             Close
@@ -821,7 +872,16 @@ export function App() {
             class="text-gray-400 hover:text-gray-600"
             title="About Ancroo"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="16" x2="12" y2="12" />
               <line x1="12" y1="8" x2="12.01" y2="8" />
@@ -831,14 +891,11 @@ export function App() {
             <span class="text-xs text-gray-500">
               {user.display_name && !/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(user.display_name)
                 ? user.display_name
-                : user.email?.split("@")[0] ?? "User"}
+                : (user.email?.split("@")[0] ?? "User")}
             </span>
           )}
           {authEnabled && (
-            <button
-              onClick={handleLogout}
-              class="text-xs text-gray-400 hover:text-gray-600"
-            >
+            <button onClick={handleLogout} class="text-xs text-gray-400 hover:text-gray-600">
               Sign out
             </button>
           )}
@@ -847,7 +904,16 @@ export function App() {
             class="text-gray-400 hover:text-gray-600"
             title="Reload workflows"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
               <polyline points="23 4 23 10 17 10" />
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
             </svg>
@@ -861,7 +927,9 @@ export function App() {
             </button>
           )}
           <button
-            onClick={() => connectionMode === "direct" ? setShowDirectSettings(true) : setSetupDone(false)}
+            onClick={() =>
+              connectionMode === "direct" ? setShowDirectSettings(true) : setSetupDone(false)
+            }
             class="text-xs text-gray-400 hover:text-gray-600"
           >
             Settings
@@ -876,200 +944,196 @@ export function App() {
             const cat = w.category ?? "other";
             (groups[cat] ??= []).push(w);
             return groups;
-          }, {})
+          }, {}),
         )
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([category, categoryWorkflows]) => (
-          <div key={category} class="mb-4">
-            <button
-              type="button"
-              onClick={() => toggleCategory(category)}
-              class="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase mb-2 hover:text-gray-700 cursor-pointer select-none w-full text-left"
-            >
-              <span class={`inline-block transition-transform duration-200 ${collapsedCategories.has(category) ? "" : "rotate-90"}`}>▶</span>
-              {categoryIcon(categoryWorkflows[0])} {category}
-            </button>
-            {!collapsedCategories.has(category) && <div class="space-y-2">
-          {categoryWorkflows.map((workflow) => {
-            const isFile = needsFileInput(workflow);
-            const isAudio = needsAudioInput(workflow);
-            const isManual = needsManualInput(workflow);
-            const isPending = pendingWorkflow?.slug === workflow.slug;
-            const isExecuting = executing === workflow.slug;
-
-            return (
-              <div key={workflow.id}>
-                <button
-                  onClick={() => handleExecute(workflow)}
-                  disabled={executing !== null && !isPending}
-                  class="w-full text-left p-3 bg-white rounded-lg border hover:border-blue-300 hover:shadow-sm transition disabled:opacity-50"
+            <div key={category} class="mb-4">
+              <button
+                type="button"
+                onClick={() => toggleCategory(category)}
+                class="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase mb-2 hover:text-gray-700 cursor-pointer select-none w-full text-left"
+              >
+                <span
+                  class={`inline-block transition-transform duration-200 ${collapsedCategories.has(category) ? "" : "rotate-90"}`}
                 >
-                  <div class="font-medium text-sm">{workflow.name}</div>
-                  {workflow.description && (
-                    <div class="text-xs text-gray-500 mt-0.5">
-                      {workflow.description}
-                    </div>
-                  )}
-                  <div class="flex items-center gap-2 mt-1">
-                    {workflow.default_hotkey && (
-                      <span class="text-xs text-blue-500">
-                        {workflow.default_hotkey}
-                      </span>
-                    )}
-                    {isAudio && (
-                      <span class="text-xs text-red-500">Voice</span>
-                    )}
-                    {isFile && (
-                      <span class="text-xs text-purple-500">File upload</span>
-                    )}
-                    {isManual && (
-                      <span class="text-xs text-teal-500">Manual input</span>
-                    )}
-                    {connectionMode === "direct" && (
-                      <span
-                        class="text-xs text-gray-400 hover:text-gray-600 ml-auto"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingWorkflow(workflow as LocalWorkflow);
-                        }}
-                      >
-                        Edit
-                      </span>
-                    )}
-                  </div>
-                  {isExecuting && !isFile && !isAudio && (
-                    <div class="flex items-center gap-2 text-xs text-amber-600 mt-1">
-                      <span class="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                      <span>Processing with AI...</span>
-                    </div>
-                  )}
-                </button>
+                  ▶
+                </span>
+                {categoryIcon(categoryWorkflows[0])} {category}
+              </button>
+              {!collapsedCategories.has(category) && (
+                <div class="space-y-2">
+                  {categoryWorkflows.map((workflow) => {
+                    const isFile = needsFileInput(workflow);
+                    const isAudio = needsAudioInput(workflow);
+                    const isManual = needsManualInput(workflow);
+                    const isPending = pendingWorkflow?.slug === workflow.slug;
+                    const isExecuting = executing === workflow.slug;
 
-                {/* Audio recording area */}
-                {isPending && isAudio && (
-                  <div class="mt-1 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    {isExecuting ? (
-                      <UploadProgressDisplay
-                        progress={uploadProgress}
-                        processing={processing}
-                        fileName="Audio recording"
-                      />
-                    ) : (
-                      <RecordingArea
-                        autoStart={autoStartRecording}
-                        stopSignal={stopRecordingSignal}
-                        deviceId={micDeviceId}
-                        onRecordingComplete={(file) =>
-                          handleRecordingComplete(file, workflow)
-                        }
-                        onError={(err) => setFileError(err)}
-                      />
-                    )}
-                    {fileError && (
-                      <div class="text-xs text-red-600 mt-1">{fileError}</div>
-                    )}
-                  </div>
-                )}
-
-                {/* File upload area */}
-                {isPending && isFile && (
-                  <div class="mt-1 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    {isExecuting ? (
-                      <UploadProgressDisplay
-                        progress={uploadProgress}
-                        processing={processing}
-                        fileName={selectedFile?.name ?? ""}
-                      />
-                    ) : (
-                      <FileUploadArea
-                        config={workflow.recipe?.file_config ?? {
-                          accept: "*/*",
-                          max_size_mb: 200,
-                          label: "File",
-                          required: true,
-                        }}
-                        file={selectedFile}
-                        error={fileError}
-                        onFileSelect={(f) => handleFileSelect(f, workflow)}
-                        onClear={() => {
-                          setSelectedFile(null);
-                          setFileError(null);
-                        }}
-                      />
-                    )}
-
-                    {selectedFile && !isExecuting && (
-                      <div class="flex gap-2 mt-2">
+                    return (
+                      <div key={workflow.id}>
                         <button
-                          onClick={() => handleExecuteWithFile(workflow)}
-                          class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                          onClick={() => handleExecute(workflow)}
+                          disabled={executing !== null && !isPending}
+                          class="w-full text-left p-3 bg-white rounded-lg border hover:border-blue-300 hover:shadow-sm transition disabled:opacity-50"
                         >
-                          Run
+                          <div class="font-medium text-sm">{workflow.name}</div>
+                          {workflow.description && (
+                            <div class="text-xs text-gray-500 mt-0.5">{workflow.description}</div>
+                          )}
+                          <div class="flex items-center gap-2 mt-1">
+                            {workflow.default_hotkey && (
+                              <span class="text-xs text-blue-500">{workflow.default_hotkey}</span>
+                            )}
+                            {isAudio && <span class="text-xs text-red-500">Voice</span>}
+                            {isFile && <span class="text-xs text-purple-500">File upload</span>}
+                            {isManual && <span class="text-xs text-teal-500">Manual input</span>}
+                            {connectionMode === "direct" && (
+                              <span
+                                class="text-xs text-gray-400 hover:text-gray-600 ml-auto"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingWorkflow(workflow as LocalWorkflow);
+                                }}
+                              >
+                                Edit
+                              </span>
+                            )}
+                          </div>
+                          {isExecuting && !isFile && !isAudio && (
+                            <div class="flex items-center gap-2 text-xs text-amber-600 mt-1">
+                              <span class="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                              <span>Processing with AI...</span>
+                            </div>
+                          )}
                         </button>
-                        <button
-                          onClick={() => {
-                            setPendingWorkflow(null);
-                            setSelectedFile(null);
-                            setFileError(null);
-                          }}
-                          class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
-                        >
-                          Cancel
-                        </button>
+
+                        {/* Audio recording area */}
+                        {isPending && isAudio && (
+                          <div class="mt-1 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                            {isExecuting ? (
+                              <UploadProgressDisplay
+                                progress={uploadProgress}
+                                processing={processing}
+                                fileName="Audio recording"
+                              />
+                            ) : (
+                              <RecordingArea
+                                autoStart={autoStartRecording}
+                                stopSignal={stopRecordingSignal}
+                                deviceId={micDeviceId}
+                                onRecordingComplete={(file) =>
+                                  handleRecordingComplete(file, workflow)
+                                }
+                                onError={(err) => setFileError(err)}
+                              />
+                            )}
+                            {fileError && <div class="text-xs text-red-600 mt-1">{fileError}</div>}
+                          </div>
+                        )}
+
+                        {/* File upload area */}
+                        {isPending && isFile && (
+                          <div class="mt-1 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                            {isExecuting ? (
+                              <UploadProgressDisplay
+                                progress={uploadProgress}
+                                processing={processing}
+                                fileName={selectedFile?.name ?? ""}
+                              />
+                            ) : (
+                              <FileUploadArea
+                                config={
+                                  workflow.recipe?.file_config ?? {
+                                    accept: "*/*",
+                                    max_size_mb: 200,
+                                    label: "File",
+                                    required: true,
+                                  }
+                                }
+                                file={selectedFile}
+                                error={fileError}
+                                onFileSelect={(f) => handleFileSelect(f, workflow)}
+                                onClear={() => {
+                                  setSelectedFile(null);
+                                  setFileError(null);
+                                }}
+                              />
+                            )}
+
+                            {selectedFile && !isExecuting && (
+                              <div class="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => handleExecuteWithFile(workflow)}
+                                  class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm"
+                                >
+                                  Run
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setPendingWorkflow(null);
+                                    setSelectedFile(null);
+                                    setFileError(null);
+                                  }}
+                                  class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Manual text input area */}
+                        {isPending && isManual && !isFile && !isAudio && (
+                          <div class="mt-1 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                            <textarea
+                              value={manualInputText}
+                              onInput={(e) =>
+                                setManualInputText((e.target as HTMLTextAreaElement).value)
+                              }
+                              placeholder="Enter text..."
+                              class="w-full p-2 bg-white border rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-300"
+                              rows={4}
+                              disabled={isExecuting}
+                            />
+                            {isExecuting && (
+                              <div class="flex items-center gap-2 text-xs text-amber-600 mt-1">
+                                <span class="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                                <span>Processing with AI...</span>
+                              </div>
+                            )}
+                            {!isExecuting && (
+                              <div class="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => executeTextWorkflow(workflow)}
+                                  disabled={!manualInputText.trim()}
+                                  class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
+                                >
+                                  Run
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setPendingWorkflow(null);
+                                    setManualInputText("");
+                                  }}
+                                  class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Manual text input area */}
-                {isPending && isManual && !isFile && !isAudio && (
-                  <div class="mt-1 p-3 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    <textarea
-                      value={manualInputText}
-                      onInput={(e) => setManualInputText((e.target as HTMLTextAreaElement).value)}
-                      placeholder="Enter text..."
-                      class="w-full p-2 bg-white border rounded-lg text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-300"
-                      rows={4}
-                      disabled={isExecuting}
-                    />
-                    {isExecuting && (
-                      <div class="flex items-center gap-2 text-xs text-amber-600 mt-1">
-                        <span class="w-3 h-3 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                        <span>Processing with AI...</span>
-                      </div>
-                    )}
-                    {!isExecuting && (
-                      <div class="flex gap-2 mt-2">
-                        <button
-                          onClick={() => executeTextWorkflow(workflow)}
-                          disabled={!manualInputText.trim()}
-                          class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
-                        >
-                          Run
-                        </button>
-                        <button
-                          onClick={() => {
-                            setPendingWorkflow(null);
-                            setManualInputText("");
-                          }}
-                          class="px-4 py-2 border rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-            </div>}
-          </div>
-        ))}
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
         {workflows.length === 0 && (
-          <div class="text-sm text-gray-400 text-center py-4">
-            No workflows available
-          </div>
+          <div class="text-sm text-gray-400 text-center py-4">No workflows available</div>
         )}
 
         {/* History */}
@@ -1080,26 +1144,32 @@ export function App() {
               onClick={() => setRecentCollapsed((v) => !v)}
               class="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase mt-6 mb-2 hover:text-gray-700 cursor-pointer select-none w-full text-left"
             >
-              <span class={`inline-block transition-transform duration-200 ${recentCollapsed ? "" : "rotate-90"}`}>▶</span>
+              <span
+                class={`inline-block transition-transform duration-200 ${recentCollapsed ? "" : "rotate-90"}`}
+              >
+                ▶
+              </span>
               Recent
             </button>
-            {!recentCollapsed && <div class="space-y-1">
-              {history.slice(0, 10).map((entry) => (
-                <HistoryItem
-                  key={entry.id}
-                  entry={entry}
-                  onCopy={async (text) => {
-                    await navigator.clipboard.writeText(text);
-                  }}
-                  onView={(entry) => {
-                    if (entry.output_full) {
-                      setResultText(entry.output_full);
-                      setResultWorkflowName(entry.workflow_name);
-                    }
-                  }}
-                />
-              ))}
-            </div>}
+            {!recentCollapsed && (
+              <div class="space-y-1">
+                {history.slice(0, 10).map((entry) => (
+                  <HistoryItem
+                    key={entry.id}
+                    entry={entry}
+                    onCopy={async (text) => {
+                      await navigator.clipboard.writeText(text);
+                    }}
+                    onView={(entry) => {
+                      if (entry.output_full) {
+                        setResultText(entry.output_full);
+                        setResultWorkflowName(entry.workflow_name);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

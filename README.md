@@ -158,13 +158,13 @@ To report a security vulnerability, please use [GitHub's private vulnerability r
 
 This project is built with the following open-source software:
 
-| Project | Purpose | License |
-|---------|---------|---------|
-| [Preact](https://preactjs.com/) | UI framework | MIT |
-| [Vite](https://vite.dev/) | Build tool | MIT |
-| [CRXJS](https://crxjs.dev/vite-plugin/) | Vite plugin for browser extensions | MIT |
-| [Tailwind CSS](https://tailwindcss.com/) | CSS framework | MIT |
-| [TypeScript](https://www.typescriptlang.org/) | Language | Apache-2.0 |
+| Project                                       | Purpose                            | License    |
+| --------------------------------------------- | ---------------------------------- | ---------- |
+| [Preact](https://preactjs.com/)               | UI framework                       | MIT        |
+| [Vite](https://vite.dev/)                     | Build tool                         | MIT        |
+| [CRXJS](https://crxjs.dev/vite-plugin/)       | Vite plugin for browser extensions | MIT        |
+| [Tailwind CSS](https://tailwindcss.com/)      | CSS framework                      | MIT        |
+| [TypeScript](https://www.typescriptlang.org/) | Language                           | Apache-2.0 |
 
 ## License
 

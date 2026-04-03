@@ -104,7 +104,7 @@ chrome.action.onClicked.addListener((tab) => {
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.create({
     id: "ancroo-run-workflow",
-    title: "Run with Ancroo",
+    title: chrome.i18n.getMessage("contextMenuRun"),
     contexts: ["selection"],
   });
 
@@ -147,8 +147,7 @@ async function refreshHotkeyBindings(retries = 0): Promise<void> {
 
     // Use cached workflows if available, otherwise fetch.
     const session = await chrome.storage.session.get("cachedWorkflows");
-    let workflows: Workflow[] =
-      (session.cachedWorkflows as Workflow[] | undefined) ?? [];
+    let workflows: Workflow[] = (session.cachedWorkflows as Workflow[] | undefined) ?? [];
     if (workflows.length === 0) {
       workflows = await listWorkflowsUnified();
       await chrome.storage.session.set({ cachedWorkflows: workflows });
@@ -183,10 +182,7 @@ async function refreshHotkeyBindings(retries = 0): Promise<void> {
  * Text workflows: execute directly (GET_SELECTION → API → INSERT_TEXT).
  * Audio/file/complex workflows: set pending state and open the side panel.
  */
-async function handleHotkeyExecution(
-  workflowSlug: string,
-  tab?: chrome.tabs.Tab,
-): Promise<void> {
+async function handleHotkeyExecution(workflowSlug: string, tab?: chrome.tabs.Tab): Promise<void> {
   if (!tab?.id) return;
 
   // Get workflow metadata to decide how to handle execution
@@ -218,10 +214,12 @@ async function handleHotkeyExecution(
   if (needsAudio) {
     await chrome.storage.session.set({ pendingRecording: workflowSlug });
     // Notify side panel if already open (runtime.sendMessage reaches extension pages)
-    chrome.runtime.sendMessage({
-      type: "START_RECORDING",
-      workflowSlug,
-    }).catch(() => {});
+    chrome.runtime
+      .sendMessage({
+        type: "START_RECORDING",
+        workflowSlug,
+      })
+      .catch(() => {});
     return;
   }
 
@@ -308,7 +306,12 @@ async function handleHotkeyExecution(
           variant: "success",
           duration: 2000,
         } as ExtensionMessage);
-      } else if (action === "side_panel_only" || action === "copy_to_clipboard" || action === "clipboard" || action === "notification") {
+      } else if (
+        action === "side_panel_only" ||
+        action === "copy_to_clipboard" ||
+        action === "clipboard" ||
+        action === "notification"
+      ) {
         // Clipboard is not available in service workers — show in side panel
         await chrome.storage.session.set({
           pendingResult: {
@@ -377,9 +380,7 @@ async function reinjectContentScripts(): Promise<void> {
     const tabs = await chrome.tabs.query({ url: ["http://*/*", "https://*/*"] });
     for (const tab of tabs) {
       if (!tab.id) continue;
-      chrome.scripting
-        .executeScript({ target: { tabId: tab.id }, files })
-        .catch(() => {});
+      chrome.scripting.executeScript({ target: { tabId: tab.id }, files }).catch(() => {});
     }
   } catch {
     // tabs.query or scripting API not available — ignore
