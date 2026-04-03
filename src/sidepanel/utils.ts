@@ -1,3 +1,4 @@
+import { WORKFLOW_CATEGORIES } from "@/shared/types";
 import type { Workflow } from "@/shared/types";
 
 /** Check if a workflow requires file input. */
@@ -48,7 +49,9 @@ export function friendlyError(msg: string): string {
   return msg;
 }
 
-/** Return an emoji icon for a workflow category (from backend, with fallback). */
-export function categoryIcon(workflow: { category_icon?: string | null }): string {
-  return workflow.category_icon ?? "\uD83D\uDD27";
+/** Return an emoji icon for a workflow category. Uses central definition, then workflow override, then fallback. */
+export function categoryIcon(workflow: { category?: string | null; category_icon?: string | null }): string {
+  const match = WORKFLOW_CATEGORIES.find((c) => c.value === workflow.category);
+  if (match) return match.icon;
+  return workflow.category_icon ?? "🔧";
 }

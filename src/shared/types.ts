@@ -23,6 +23,19 @@ export interface InputDataPacket {
   context?: { url: string; title: string };
 }
 
+/** Fixed workflow categories with display metadata. */
+export const WORKFLOW_CATEGORIES = [
+  { value: "Starter", label: "Starter", icon: "⚡" },
+  { value: "Writing", label: "Writing", icon: "✍️" },
+  { value: "Coding", label: "Coding", icon: "💻" },
+  { value: "Translation", label: "Translation", icon: "🌐" },
+  { value: "Research", label: "Research", icon: "🔍" },
+  { value: "Productivity", label: "Productivity", icon: "⚙️" },
+  { value: "Custom", label: "Custom", icon: "🔧" },
+] as const;
+
+export type WorkflowCategory = (typeof WORKFLOW_CATEGORIES)[number]["value"];
+
 /** Workflow definition from the backend. */
 export interface Workflow {
   id: string;

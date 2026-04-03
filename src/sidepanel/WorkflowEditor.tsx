@@ -1,5 +1,6 @@
 import { useState, useEffect } from "preact/hooks";
-import type { LocalWorkflow, CollectionRecipe } from "@/shared/types";
+import { WORKFLOW_CATEGORIES } from "@/shared/types";
+import type { LocalWorkflow, CollectionRecipe, WorkflowCategory } from "@/shared/types";
 import type { LLMProviderConfig } from "@/shared/settings";
 import { DEFAULT_MODELS } from "./ProviderSettings";
 import { fetchModels, type ModelInfo } from "@/shared/llm/models";
@@ -48,6 +49,9 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
   const [inputSource, setInputSource] = useState<CollectionRecipe["collect"][number]>(
     workflow?.recipe?.collect?.[0] ?? "text_selection",
   );
+  const [category, setCategory] = useState<WorkflowCategory>(
+    (workflow?.category as WorkflowCategory) ?? "Custom",
+  );
   const [temperature, setTemperature] = useState<string>(workflow?.temperature?.toString() ?? "");
   const [availableModels, setAvailableModels] = useState<ModelInfo[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
@@ -86,8 +90,8 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
       slug,
       name: name.trim(),
       description: description.trim() || null,
-      category: workflow?.category ?? "Custom",
-      category_icon: workflow?.category_icon ?? null,
+      category,
+      category_icon: WORKFLOW_CATEGORIES.find((c) => c.value === category)?.icon ?? null,
       default_hotkey: hotkey.trim() || null,
       version: workflow?.version ?? "1.0.0",
       workflow_type: "text_transformation",
@@ -137,6 +141,18 @@ export function WorkflowEditor({ workflow, providers, onSave, onDelete, onCancel
               class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
               placeholder="What this workflow does..."
             />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-gray-700">Category</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory((e.target as HTMLSelectElement).value as WorkflowCategory)}
+              class="w-full border rounded px-2 py-1.5 text-sm mt-0.5"
+            >
+              {WORKFLOW_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
+              ))}
+            </select>
           </div>
         </div>
 
