@@ -172,7 +172,7 @@ MIT — see [LICENSE](LICENSE). The Ancroo name is not covered by this license a
 
 ## Author
 
-**Stefan Schmidbauer** — [GitHub](https://github.com/Stefan-Schmidbauer)
+**Stefan Schmidbauer** — [GitHub](https://github.com/Stefan-Schmidbauer) · [stefan@ancroo.com](mailto:stefan@ancroo.com)
 
 ---
 
