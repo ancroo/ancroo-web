@@ -19,6 +19,9 @@ dist/
 coverage/
 testpages/screenshots/
 
+# Custom demo pages (not for public repo)
+testpages/demo-*
+
 # Promo image sources
 store/*.html
 

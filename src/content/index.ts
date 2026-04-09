@@ -226,6 +226,22 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
         const el = document.querySelector(field.selector);
         if (el) {
           if (
+            el instanceof HTMLInputElement &&
+            (el.type === "checkbox" || el.type === "radio")
+          ) {
+            // Collect all checked values for checkbox/radio groups with the same name
+            const name = el.getAttribute("name");
+            if (name) {
+              const checked = document.querySelectorAll(
+                `input[name='${name}']:checked`,
+              );
+              result[field.name] = Array.from(checked)
+                .map((cb) => (cb as HTMLInputElement).value)
+                .join(", ");
+            } else {
+              result[field.name] = el.checked ? el.value : "";
+            }
+          } else if (
             el instanceof HTMLInputElement ||
             el instanceof HTMLTextAreaElement ||
             el instanceof HTMLSelectElement
