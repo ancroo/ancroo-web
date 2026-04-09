@@ -38,11 +38,14 @@ jobs:
       - name: Build extension
         run: pnpm build
 
+      - name: Create ZIP archive
+        run: cd dist && zip -9 -r ../ancroo-web-extension.zip .
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: ancroo-web-extension
-          path: dist/
+          path: ancroo-web-extension.zip
           retention-days: 30
 
   release:
