@@ -9,3 +9,15 @@ updates:
     # at the default, a stalled queue silently blocks all further updates,
     # security ones included.
     open-pull-requests-limit: 10
+
+  # The workflows pin every action to a commit SHA. Dependabot bumps the SHA
+  # together with its version comment, so the pins don't quietly go stale.
+  # Grouped into one PR: action bumps touch only workflow files and never
+  # conflict with each other.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
