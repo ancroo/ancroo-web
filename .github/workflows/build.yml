@@ -150,9 +150,8 @@ jobs:
       - name: Upload to Chrome Web Store
         env:
           # The item id is public (store URL, README, About panel), so it is a
-          # variable. The secret fallback keeps releases working until it has
-          # been moved; drop it once the repo secret is deleted.
-          EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID || secrets.CWS_EXTENSION_ID }}
+          # variable.
+          EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
           CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}

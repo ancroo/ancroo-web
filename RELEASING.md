@@ -39,8 +39,7 @@ rather than repo-wide (Settings → Environments → `store`):
 
 The item id is a **variable, not a secret**: it is public in the store URL, the
 README and the About panel, so masking it protects nothing, while hiding it
-makes a wrong id indistinguishable from a wrong account in the logs. Until it
-has been moved, the workflows fall back to a repo secret of the same name.
+makes a wrong id indistinguishable from a wrong account in the logs.
 
 The same OAuth client and refresh token serve every extension of the publisher
 account; only `CWS_EXTENSION_ID` is per extension.
