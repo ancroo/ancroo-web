@@ -98,7 +98,7 @@ Free and open source (MIT licence) — the full source is on GitHub, so you can 
 
 SUPPORT
 
-Having trouble or got a question? Email us at support@ancroo.com — we're happy to help.
+Questions or feedback? Email support@ancroo.com — happy to help.
 
 Source code, issues and licence:
 https://github.com/ancroo/ancroo-web
