@@ -130,7 +130,7 @@ https://github.com/ancroo/ancroo-web/blob/main/PRIVACY.md
 ## Single purpose (required field)
 
 ```text
-Ancroo runs the user's own AI prompts on text from the current page — selected text, the whole page or manual input — through an LLM provider the user configures, and shows the result in the side panel or inserts it into the page.
+Ancroo's single purpose is to run user-defined AI prompts ("actions") on text from the current web page — selected text, manually entered text, or the page's visible text — by sending it to an LLM provider that the user configures, and then showing the result in a side panel or inserting it back into the page. Every feature serves this one purpose: applying an AI prompt to page text and returning the output.
 ```
 
 ---
