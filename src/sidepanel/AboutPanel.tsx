@@ -67,6 +67,17 @@ export function AboutPanel({ onClose }: { onClose: () => void }) {
               Try it out
             </a>
           </div>
+          <div class="flex justify-between px-3 py-2.5">
+            <span class="text-sm text-gray-500">Privacy</span>
+            <a
+              href="https://github.com/ancroo/ancroo-web/blob/main/PRIVACY.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-sm text-blue-600 hover:text-blue-700"
+            >
+              Policy
+            </a>
+          </div>
         </div>
 
         <div class="bg-white rounded-lg border divide-y overflow-hidden">
