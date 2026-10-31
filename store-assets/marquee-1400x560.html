@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  .marquee {
+    width: 1400px;
+    height: 560px;
+    background: linear-gradient(135deg, #1a4b7a 0%, #0f2d4a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 80px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .marquee::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: 200px;
+    width: 500px;
+    height: 500px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 50%;
+  }
+
+  .left {
+    flex-shrink: 0;
+    max-width: 500px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 32px;
+  }
+
+  .icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+  }
+
+  .title {
+    font-size: 52px;
+    font-weight: 700;
+    letter-spacing: -1px;
+  }
+
+  .subtitle {
+    font-size: 38px;
+    font-weight: 400;
+    opacity: 0.9;
+    line-height: 1.4;
+    margin-bottom: 20px;
+  }
+
+  .tagline {
+    font-size: 30px;
+    font-weight: 700;
+    opacity: 0.75;
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+  }
+
+  .right {
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .screenshot {
+    width: 760px;
+    height: 400px;
+    object-fit: cover;
+    object-position: center top;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+</style>
+</head>
+<body>
+  <div class="marquee">
+    <div class="left">
+      <div class="header">
+        <img class="icon" src="../public/icon-128.png" alt="Ancroo">
+        <div class="title">Ancroo</div>
+      </div>
+      <div class="subtitle">AI Prompt Launcher<br>for your Browser</div>
+      <div class="tagline">Point. Prompt. Done.</div>
+    </div>
+    <div class="right">
+      <img class="screenshot" src="../assets/screenshots/ancroo.png" alt="Ancroo Side Panel">
+    </div>
+  </div>
+</body>
+</html>

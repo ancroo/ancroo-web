@@ -124,19 +124,30 @@ src/
 tools/             # Dev tooling (local fake LLM server)
 ```
 
+## Packaging and releases
+
+`./build.sh` builds `dist/` and packs it into `ancroo-web-extension.zip`. The
+release setup is documented in [RELEASING.md](RELEASING.md), store texts and
+permission justifications in [STORE.md](STORE.md).
+
 ## Contributing
 
 Contributions are welcome! Feel free to open an [issue](https://github.com/ancroo/ancroo-web/issues) or submit a pull request.
 
 ## Privacy
 
-See [Privacy Policy](PRIVACY_POLICY.md) — Ancroo collects no data. All settings, API keys, and history stay in your browser. Data is only sent to LLM providers you configure.
+See [PRIVACY.md](PRIVACY.md) — Ancroo collects no data. All settings, API keys, and history stay in your browser. Data is only sent to LLM providers you configure.
 
 ## Security
 
 **API Keys:** API keys are stored in `chrome.storage.local`, which is sandboxed per extension and not accessible by websites or other extensions. Keys are only sent to the configured LLM provider. Note that the storage is not encrypted on disk — anyone with access to your browser profile can read them. This is standard practice for browser extensions.
 
 To report a security vulnerability, please use [GitHub's private vulnerability reporting](https://github.com/ancroo/ancroo-web/security/advisories/new) instead of opening a public issue.
+
+## Support
+
+Questions or feedback? Email [support@ancroo.com](mailto:support@ancroo.com) or
+open an [issue](https://github.com/ancroo/ancroo-web/issues).
 
 ## Acknowledgments
 

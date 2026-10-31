@@ -6,6 +6,12 @@ builds the extension on every push to `main` and every pull request. Pushing a
 the Chrome Web Store as a **draft**. Reviewing and hitting Publish in the
 developer dashboard stays manual.
 
+## Building the upload package
+
+Run `./build.sh` to build the extension into `dist/` (for **Load unpacked**) and
+pack it into `ancroo-web-extension.zip`, with `manifest.json` at the archive root.
+`--no-zip` skips the zip. Both are gitignored.
+
 ## Cutting a release
 
 1. Bump `version` in `manifest.json` and `package.json` (keeps the repo
@@ -48,7 +54,9 @@ To check the credentials without uploading anything, run **Verify Store
 Credentials** from the Actions tab. It exchanges the refresh token and reads the
 item's status. `uploadState: NOT_FOUND` there is normal: it describes the last
 upload, and means no draft is pending. What proves access is the store
-returning the item's `id` and `crxVersion`.
+returning the item's `id` and `crxVersion`. On the upload `PUT`, by contrast,
+`uploadState` really does report that upload's outcome, and `SUCCESS` is what to
+require.
 
 ### Getting a refresh token
 
