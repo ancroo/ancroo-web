@@ -1,5 +1,7 @@
 /** Message types for communication between extension components. */
 
+import type { HotkeyBinding } from "./types";
+
 export interface GetSelectionMessage {
   type: "GET_SELECTION";
   /**
@@ -100,6 +102,21 @@ export interface ExecuteHotkeyActionMessage {
   actionSlug: string;
 }
 
+/**
+ * Content script → background, once on load. chrome.storage is closed to
+ * content scripts, so this is how they get their hotkey bindings. Answered with
+ * a HotkeyBinding[] on the response channel.
+ */
+export interface GetHotkeyBindingsMessage {
+  type: "GET_HOTKEY_BINDINGS";
+}
+
+/** Background → all tabs and frames, whenever the hotkey bindings change. */
+export interface HotkeyBindingsChangedMessage {
+  type: "HOTKEY_BINDINGS_CHANGED";
+  bindings: HotkeyBinding[];
+}
+
 export interface WriteClipboardMessage {
   type: "WRITE_CLIPBOARD";
   text: string;
@@ -122,5 +139,7 @@ export type ExtensionMessage =
   | InsertAfterMessage
   | InsertResultMessage
   | ExecuteHotkeyActionMessage
+  | GetHotkeyBindingsMessage
+  | HotkeyBindingsChangedMessage
   | WriteClipboardMessage
   | WriteClipboardResultMessage;

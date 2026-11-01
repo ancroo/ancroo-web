@@ -1,11 +1,18 @@
 import { buildHotkeyBindings, HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
 import { fetchHotkeySettingsUnified } from "@/shared/action-provider";
+import type { ExtensionMessage } from "@/shared/messages";
 import type { HotkeyBinding } from "@/shared/types";
 
-// Allow content scripts to read chrome.storage.session (required for hotkey bindings)
-chrome.storage.session.setAccessLevel({ accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS" });
+// Keep content scripts out of chrome.storage: local holds the API keys, and they
+// share a process with every web page. They get their hotkey bindings by message
+// instead. Session is set explicitly too, because older versions opened it up.
+for (const area of [chrome.storage.local, chrome.storage.session]) {
+  area.setAccessLevel({ accessLevel: "TRUSTED_CONTEXTS" }).catch((err) => {
+    console.error("Failed to restrict storage access:", err);
+  });
+}
 
-chrome.runtime.onMessage.addListener((msg, sender) => {
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   // Only accept messages from our own extension
   if (sender.id !== chrome.runtime.id) return false;
 
@@ -35,6 +42,15 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
       })
       .catch(() => {});
     return false;
+  }
+
+  // --- Content script loaded, hand it the hotkey map ---
+  if (msg.type === "GET_HOTKEY_BINDINGS") {
+    getHotkeyBindings().then(sendResponse, (err) => {
+      console.error("Hotkey lookup failed:", err);
+      sendResponse([]);
+    });
+    return true; // keep channel open for async sendResponse
   }
 
   // --- Side panel loaded actions, refresh the hotkey map ---
@@ -75,9 +91,53 @@ chrome.runtime.onStartup.addListener(() => {
 
 // --- Hotkey management ---
 
+async function readHotkeyBindings(area: chrome.storage.StorageArea): Promise<HotkeyBinding[]> {
+  const stored = await area.get(HOTKEY_STORAGE_KEY);
+  return (stored[HOTKEY_STORAGE_KEY] as HotkeyBinding[] | undefined) ?? [];
+}
+
 /**
- * Fetch hotkey settings and store parsed bindings in chrome.storage.session
- * for the content script to read.
+ * The bindings for a freshly loaded content script: session storage first, then
+ * the persisted copy (session storage is empty after a browser restart), and
+ * only when both are empty a refresh from the local actions.
+ */
+async function getHotkeyBindings(): Promise<HotkeyBinding[]> {
+  const fromSession = await readHotkeyBindings(chrome.storage.session);
+  if (fromSession.length > 0) return fromSession;
+
+  const persisted = await readHotkeyBindings(chrome.storage.local);
+  if (persisted.length > 0) {
+    await chrome.storage.session.set({ [HOTKEY_STORAGE_KEY]: persisted });
+    return persisted;
+  }
+
+  await refreshHotkeyBindings();
+  return readHotkeyBindings(chrome.storage.session);
+}
+
+/**
+ * Store bindings in chrome.storage.session and, if they changed, push them to
+ * the content scripts of all tabs. The comparison matters: without any hotkeys
+ * every page load ends in a refresh, which must not message every open tab.
+ * Both sides are read back from storage because it reorders object keys, so a
+ * fresh value never stringifies like its stored copy.
+ */
+async function publishHotkeyBindings(bindings: HotkeyBinding[]): Promise<void> {
+  const previous = JSON.stringify(await readHotkeyBindings(chrome.storage.session));
+  await chrome.storage.session.set({ [HOTKEY_STORAGE_KEY]: bindings });
+  if (JSON.stringify(await readHotkeyBindings(chrome.storage.session)) === previous) return;
+
+  const tabs = await chrome.tabs.query({});
+  for (const tab of tabs) {
+    if (!tab.id) continue;
+    const message: ExtensionMessage = { type: "HOTKEY_BINDINGS_CHANGED", bindings };
+    // Rejects for tabs without a content script (chrome:// pages etc.).
+    chrome.tabs.sendMessage(tab.id, message).catch(() => {});
+  }
+}
+
+/**
+ * Fetch hotkey settings and publish the parsed bindings to the content scripts.
  *
  * Bindings are additionally persisted in chrome.storage.local so they
  * survive browser restarts.
@@ -90,7 +150,7 @@ async function refreshHotkeyBindings(retries = 0): Promise<void> {
     const mappings = await fetchHotkeySettingsUnified();
 
     const bindings = buildHotkeyBindings(mappings);
-    await chrome.storage.session.set({ [HOTKEY_STORAGE_KEY]: bindings });
+    await publishHotkeyBindings(bindings);
     // Persist for offline / startup fallback
     await chrome.storage.local.set({ [HOTKEY_STORAGE_KEY]: bindings });
   } catch (err) {
@@ -102,13 +162,7 @@ async function refreshHotkeyBindings(retries = 0): Promise<void> {
     }
     // All retries exhausted — fall back to persisted bindings from a
     // previous successful fetch so hotkeys still work across restarts.
-    const stored = await chrome.storage.local.get(HOTKEY_STORAGE_KEY);
-    const cached = (stored[HOTKEY_STORAGE_KEY] as HotkeyBinding[] | undefined) ?? [];
-    if (cached.length > 0) {
-      await chrome.storage.session.set({ [HOTKEY_STORAGE_KEY]: cached });
-    } else {
-      await chrome.storage.session.remove(HOTKEY_STORAGE_KEY);
-    }
+    await publishHotkeyBindings(await readHotkeyBindings(chrome.storage.local));
   }
 }
 

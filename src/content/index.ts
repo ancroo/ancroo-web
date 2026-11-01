@@ -1,5 +1,5 @@
 import type { ExtensionMessage } from "@/shared/messages";
-import { matchesEvent, HOTKEY_STORAGE_KEY } from "@/shared/hotkeys";
+import { matchesEvent } from "@/shared/hotkeys";
 import type { HotkeyBinding } from "@/shared/types";
 import {
   smartInsertText,
@@ -94,48 +94,25 @@ function getInputSelection(): string {
 // --- Hotkey handling ---
 
 let hotkeyBindings: HotkeyBinding[] = [];
+// A push can overtake the initial response — that response is then the older
+// value and must not overwrite the pushed one.
+let hotkeyBindingsPushed = false;
 
-// Load initial bindings from session storage.
-// If empty (or session storage rejects — it does when this script runs before
-// the freshly started service worker has granted access via setAccessLevel),
-// fall back to persistent local storage (survives browser restarts).
-// If still empty, ask the background to refresh from local actions.
+// chrome.storage is closed to this script (it holds the API keys, and this
+// script shares a process with the web page), so bindings come from the
+// background: requested once here, then pushed as HOTKEY_BINDINGS_CHANGED.
 // Wrapped in try-catch to gracefully handle orphaned content scripts
 // ("Extension context invalidated" after extension reload).
 async function loadInitialBindings(): Promise<void> {
-  let fromSession: HotkeyBinding[] = [];
-  try {
-    const data = await chrome.storage.session.get(HOTKEY_STORAGE_KEY);
-    fromSession = (data[HOTKEY_STORAGE_KEY] as HotkeyBinding[] | undefined) ?? [];
-  } catch {
-    // Access not granted yet — continue with the local-storage fallback.
-  }
-  hotkeyBindings = fromSession;
-  if (hotkeyBindings.length === 0) {
-    const local = await chrome.storage.local.get(HOTKEY_STORAGE_KEY);
-    hotkeyBindings = (local[HOTKEY_STORAGE_KEY] as HotkeyBinding[] | undefined) ?? [];
-    if (hotkeyBindings.length > 0) {
-      await chrome.storage.session.set({ [HOTKEY_STORAGE_KEY]: hotkeyBindings }).catch(() => {});
-    } else {
-      chrome.runtime.sendMessage({ type: "REFRESH_HOTKEYS" });
-    }
-  }
+  const bindings = (await chrome.runtime.sendMessage({ type: "GET_HOTKEY_BINDINGS" })) as
+    HotkeyBinding[] | undefined;
+  if (!hotkeyBindingsPushed) hotkeyBindings = bindings ?? [];
 }
 try {
   loadInitialBindings().catch(() => {});
 } catch {
   // Orphaned content script — silently ignore
 }
-
-// Stay in sync when background updates the bindings. Area-scoped listener:
-// the generic chrome.storage.onChanged would deliver every local-area write
-// (including the full history payload) to every tab just to be discarded.
-chrome.storage.session.onChanged.addListener((changes) => {
-  if (!isCurrentInjection()) return;
-  if (changes[HOTKEY_STORAGE_KEY]) {
-    hotkeyBindings = (changes[HOTKEY_STORAGE_KEY].newValue as HotkeyBinding[]) ?? [];
-  }
-});
 
 // Listen for keyboard shortcuts (capture phase to intercept before page handlers)
 function hotkeyHandler(event: KeyboardEvent): void {
@@ -178,6 +155,12 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
   }
   // Only accept messages from our own extension
   if (sender.id !== chrome.runtime.id) {
+    return false;
+  }
+
+  if (message.type === "HOTKEY_BINDINGS_CHANGED") {
+    hotkeyBindings = message.bindings;
+    hotkeyBindingsPushed = true;
     return false;
   }
 
