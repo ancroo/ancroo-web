@@ -163,7 +163,7 @@ This project is built with the following open-source software:
 
 ## License
 
-MIT — see [LICENSE](LICENSE). The Ancroo name is not covered by this license and remains the property of the author.
+MIT — see [LICENSE](LICENSE). The Ancroo name and the anchor logo are not covered by this license and remain the property of the author.
 
 ## Author
 
