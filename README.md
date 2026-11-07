@@ -17,7 +17,7 @@ AI Prompt Launcher for your Browser. Point at anything on a page, run an AI prom
 
 Manifest V3 browser extension built with Preact and TypeScript. Calls LLM providers directly — no server or account needed.
 
-![Ancroo](assets/screenshots/ancroo.png)
+![Ancroo](assets/screenshots/ancroo.jpg)
 
 > 📺 **See Ancroo in action:** watch the [overview video](https://www.youtube.com/watch?v=2czqRFo1qpU) for a quick tour of how it works.
 
