@@ -4,6 +4,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Only propose releases that are at least a week old: hijacked packages
+    # are usually caught and pulled within days, so the delay keeps them out.
+    # Security updates ignore the cooldown and still arrive immediately.
+    cooldown:
+      default-days: 7
     # Default is 5. Lockfile conflicts mean these PRs are applied in batches
     # locally rather than merged one by one, so the queue needs headroom --
     # at the default, a stalled queue silently blocks all further updates,
@@ -18,6 +23,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns: ["*"]
