@@ -9,10 +9,18 @@ updates:
     # Security updates ignore the cooldown and still arrive immediately.
     cooldown:
       default-days: 7
-    # Default is 5. Lockfile conflicts mean these PRs are applied in batches
-    # locally rather than merged one by one, so the queue needs headroom --
-    # at the default, a stalled queue silently blocks all further updates,
-    # security ones included.
+    # Every npm PR touches pnpm-lock.yaml, so separate PRs conflict and get
+    # rebased after each merge, and every rebase has to be verified again.
+    # Minor and patch bumps of dev dependencies therefore come as one PR with
+    # one lockfile. Majors and runtime dependencies (they ship to users and are
+    # reviewed by hand) stay separate. Groups apply to version updates only:
+    # security updates still arrive at once, one PR each.
+    groups:
+      npm-dev:
+        dependency-type: development
+        update-types: [minor, patch]
+    # Default is 5. Headroom for the PRs that stay separate: at the limit,
+    # Dependabot silently stops opening any further PR, security ones included.
     open-pull-requests-limit: 10
 
   # The workflows pin every action to a commit SHA. Dependabot bumps the SHA
